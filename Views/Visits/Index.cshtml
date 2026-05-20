@@ -1,0 +1,98 @@
+@model List<Visit>
+@{
+    ViewData["Title"] = "Visits";
+    ViewData["PageTitle"] = "Visit Schedule";
+    var statuses = new[] { "All", "Scheduled", "Completed", "Missed", "Cancelled", "Rescheduled" };
+    var current = ViewBag.Status as string ?? "All";
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-calendar-check" style="color:var(--primary);margin-right:10px;"></i>Visit Schedule</h2>
+        <p>Manage and track all participant visits across studies</p>
+    </div>
+    <a href="@Url.Action("Create")" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Schedule Visit</a>
+</div>
+
+<div class="filter-bar">
+    <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;width:100%;align-items:center;">
+        @foreach (var s in statuses)
+        {
+            <a href="@Url.Action("Index", new{status = s == "All" ? null : s})"
+               class="btn @(current == s ? "btn-primary" : "btn-secondary") btn-sm">@s</a>
+        }
+        <a href="@Url.Action("Visits","Reports")" class="btn btn-glass btn-sm" style="margin-left:auto;">
+            <i class="fa-solid fa-chart-bar"></i> Visit Report
+        </a>
+    </form>
+</div>
+
+<div class="card">
+    @if (Model.Any())
+    {
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr><th>Participant</th><th>Study</th><th>Visit Type</th><th>#</th><th>Scheduled</th><th>Location</th><th>Status</th><th style="text-align:right;">Actions</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var v in Model)
+                    {
+                        <tr>
+                            <td>
+                                <a href="@Url.Action("Details","Participants",new{id=v.ParticipantId})" style="color:var(--primary);font-weight:600;text-decoration:none;">
+                                    @v.Participant?.FirstName @v.Participant?.LastName
+                                </a>
+                            </td>
+                            <td><code style="font-size:0.8rem;color:var(--primary);background:var(--primary-light);padding:2px 7px;border-radius:4px;">@v.Study?.StudyCode</code></td>
+                            <td style="font-weight:600;">@v.VisitType</td>
+                            <td style="color:var(--text-muted);">#@v.VisitNumber</td>
+                            <td style="font-size:0.85rem;">
+                                @v.ScheduledDate.ToString("MMM d, yyyy")
+                                @if (v.Status == "Scheduled" && v.ScheduledDate.Date == DateTime.Today)
+                                { <span style="color:var(--primary);font-size:0.75rem;font-weight:700;display:block;">Today</span> }
+                                @if (v.Status == "Scheduled" && v.ScheduledDate.Date < DateTime.Today)
+                                { <span style="color:var(--danger);font-size:0.75rem;font-weight:700;display:block;">Overdue</span> }
+                            </td>
+                            <td style="font-size:0.83rem;color:var(--text-secondary);">@(v.Location ?? "—")</td>
+                            <td><span class="badge badge-@v.Status.ToLower()">@v.Status</span></td>
+                            <td style="text-align:right;">
+                                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                                    @if (v.Status == "Scheduled")
+                                    {
+                                        <button onclick="markComplete(@v.VisitId, this)" class="btn btn-success btn-sm" title="Mark Complete">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                    }
+                                    <a href="@Url.Action("Edit",new{id=v.VisitId})" class="btn btn-glass btn-sm btn-icon"><i class="fa-solid fa-pen"></i></a>
+                                    <a href="@Url.Action("Delete",new{id=v.VisitId})" class="btn btn-danger btn-sm btn-icon"><i class="fa-solid fa-trash"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-regular fa-calendar"></i></div>
+            <h4>No visits found</h4>
+            <p>Schedule the first visit to get started.</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+function markComplete(visitId, btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    $.post('/Visits/MarkComplete/' + visitId, { __RequestVerificationToken: $('[name=__RequestVerificationToken]').val() })
+     .done(() => location.reload())
+     .fail(() => { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-check"></i>'; alert('Error. Please try again.'); });
+}
+</script>
+@Html.AntiForgeryToken()
+}

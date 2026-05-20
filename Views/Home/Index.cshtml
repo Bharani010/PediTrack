@@ -1,0 +1,241 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["PageTitle"] = "Dashboard";
+}
+
+<!-- ── STAT CARDS ── -->
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fa-solid fa-child-reaching"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.TotalParticipants</div>
+            <div class="stat-label">Total Participants</div>
+            <div class="stat-delta up"><i class="fa-solid fa-arrow-trend-up"></i> @Model.ActiveParticipants active</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon sky"><i class="fa-solid fa-flask"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.TotalStudies</div>
+            <div class="stat-label">Research Studies</div>
+            <div class="stat-delta up"><i class="fa-solid fa-circle-check"></i> @Model.ActiveStudies active</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-calendar-check"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.UpcomingVisits</div>
+            <div class="stat-label">Upcoming Visits (14 days)</div>
+            <div class="stat-delta"><i class="fa-regular fa-calendar"></i> @Model.TotalVisits total</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.TotalEnrollments</div>
+            <div class="stat-label">Study Enrollments</div>
+            <div class="stat-delta"><i class="fa-solid fa-link"></i> across @Model.TotalStudies studies</div>
+        </div>
+    </div>
+    @if (Model.ExpiredConsents > 0 || Model.MissedVisits > 0)
+    {
+        <div class="stat-card" style="border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.03);">
+            <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="stat-info">
+                <div class="stat-value" style="color:var(--danger);">@(Model.ExpiredConsents + Model.MissedVisits)</div>
+                <div class="stat-label">Action Items</div>
+                <div class="stat-delta down"><i class="fa-solid fa-circle-exclamation"></i> @Model.ExpiredConsents expired consents · @Model.MissedVisits missed visits</div>
+            </div>
+        </div>
+    }
+    @if (Model.ExpiringConsentsThisMonth > 0)
+    {
+        <div class="stat-card" style="border-color: rgba(245,158,11,0.25);">
+            <div class="stat-icon amber"><i class="fa-solid fa-file-signature"></i></div>
+            <div class="stat-info">
+                <div class="stat-value" style="color:var(--warning);">@Model.ExpiringConsentsThisMonth</div>
+                <div class="stat-label">Consents Expiring This Month</div>
+                <div class="stat-delta down"><i class="fa-solid fa-clock"></i> Renewal required</div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- ── CHARTS ROW ── -->
+<div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:20px; margin-bottom:24px;">
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-header-title"><i class="fa-solid fa-chart-line" style="color:var(--primary);margin-right:8px;"></i>Enrollment Trend — Last 6 Months</span>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="height:220px;">
+                <canvas id="enrollmentChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-header-title"><i class="fa-solid fa-flask" style="color:var(--primary);margin-right:8px;"></i>Studies by Status</span>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="height:220px;">
+                <canvas id="studyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-header-title"><i class="fa-solid fa-calendar" style="color:var(--primary);margin-right:8px;"></i>Visits by Status</span>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="height:220px;">
+                <canvas id="visitChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── BOTTOM ROW ── -->
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+
+    <!-- Upcoming Visits -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-header-title"><i class="fa-solid fa-clock" style="color:var(--primary);margin-right:8px;"></i>Upcoming Visits</span>
+            <a href="@Url.Action("Index","Visits")" class="btn btn-glass btn-sm">View All</a>
+        </div>
+        @if (Model.UpcomingVisitList.Any())
+        {
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr><th>Participant</th><th>Study</th><th>Type</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var v in Model.UpcomingVisitList)
+                        {
+                            <tr>
+                                <td><a href="@Url.Action("Details","Participants",new{id=v.ParticipantId})" style="color:var(--primary);font-weight:600;text-decoration:none;">@v.Participant?.FirstName @v.Participant?.LastName</a></td>
+                                <td style="font-size:0.8rem;color:var(--text-secondary);">@v.Study?.StudyCode</td>
+                                <td><span class="badge badge-scheduled">@v.VisitType</span></td>
+                                <td style="font-size:0.82rem;">@v.ScheduledDate.ToString("MMM d, yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fa-regular fa-calendar-check"></i></div>
+                <h4>No upcoming visits</h4>
+                <p>All clear for the next 14 days.</p>
+            </div>
+        }
+    </div>
+
+    <!-- Recent Enrollments -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-header-title"><i class="fa-solid fa-user-plus" style="color:var(--primary);margin-right:8px;"></i>Recent Enrollments</span>
+            <a href="@Url.Action("Index","Participants")" class="btn btn-glass btn-sm">View All</a>
+        </div>
+        @if (Model.RecentEnrollments.Any())
+        {
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr><th>Participant</th><th>Study</th><th>Date</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var e in Model.RecentEnrollments)
+                        {
+                            <tr>
+                                <td><a href="@Url.Action("Details","Participants",new{id=e.ParticipantId})" style="color:var(--primary);font-weight:600;text-decoration:none;">@e.Participant?.FirstName @e.Participant?.LastName</a></td>
+                                <td style="font-size:0.8rem;color:var(--text-secondary);">@e.Study?.StudyCode</td>
+                                <td style="font-size:0.82rem;">@e.EnrollmentDate.ToString("MMM d, yyyy")</td>
+                                <td>
+                                    <span class="badge badge-@e.Status.ToLower()">@e.Status</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fa-solid fa-users"></i></div>
+                <h4>No enrollments yet</h4>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const orangePalette = ['#ea580c','#f97316','#fb923c','#fdba74','#fed7aa','#8b5cf6','#10b981','#ef4444'];
+const gridColor = 'rgba(0,0,0,0.05)';
+
+// Enrollment trend line chart
+new Chart(document.getElementById('enrollmentChart'), {
+    type: 'line',
+    data: {
+        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.EnrollmentMonths)),
+        datasets: [{
+            label: 'Enrollments',
+            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.EnrollmentCounts)),
+            borderColor: '#ea580c',
+            backgroundColor: 'rgba(234,88,12,0.08)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#ea580c',
+            pointRadius: 4,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: gridColor } },
+            x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+        }
+    }
+});
+
+// Study status doughnut
+new Chart(document.getElementById('studyChart'), {
+    type: 'doughnut',
+    data: {
+        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StudyStatusLabels)),
+        datasets: [{ data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StudyStatusCounts)), backgroundColor: orangePalette, borderWidth: 0 }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, boxWidth: 12 } } },
+        cutout: '65%'
+    }
+});
+
+// Visit status doughnut
+new Chart(document.getElementById('visitChart'), {
+    type: 'doughnut',
+    data: {
+        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.VisitStatusLabels)),
+        datasets: [{ data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.VisitStatusCounts)), backgroundColor: orangePalette, borderWidth: 0 }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, boxWidth: 12 } } },
+        cutout: '65%'
+    }
+});
+</script>
+}

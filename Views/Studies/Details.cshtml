@@ -1,0 +1,147 @@
+@model Study
+@{
+    ViewData["Title"] = Model.StudyName;
+    ViewData["PageTitle"] = "Study Details";
+    var enrolled = Model.StudyEnrollments.Count;
+    var pct = Model.MaxParticipants.HasValue && Model.MaxParticipants > 0
+        ? Math.Min(100, (int)((enrolled / (double)Model.MaxParticipants.Value) * 100)) : 0;
+}
+
+<div class="profile-header" style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
+    <div style="flex:1;min-width:260px;">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+            <code style="background:rgba(255,255,255,0.2);color:#fff;padding:4px 10px;border-radius:6px;font-size:0.85rem;">@Model.StudyCode</code>
+            <span class="badge badge-@Model.Status.ToLower()">@Model.Status</span>
+        </div>
+        <p class="profile-name">@Model.StudyName</p>
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <p class="profile-sub">@Model.Description</p>
+        }
+        <div class="profile-meta">
+            <div class="profile-meta-item"><strong>@(Model.PrincipalInvestigator != null ? $"{Model.PrincipalInvestigator.Title} {Model.PrincipalInvestigator.FirstName} {Model.PrincipalInvestigator.LastName}" : "—")</strong>Principal Investigator</div>
+            <div class="profile-meta-item"><strong>@(Model.IRBNumber ?? "—")</strong>IRB Number</div>
+            <div class="profile-meta-item"><strong>@(Model.Phase ?? "—")</strong>Phase</div>
+            <div class="profile-meta-item"><strong>@Model.StartDate.ToString("MMM d, yyyy")</strong>Start Date</div>
+            @if (Model.EndDate.HasValue)
+            {
+                <div class="profile-meta-item"><strong>@Model.EndDate.Value.ToString("MMM d, yyyy")</strong>End Date</div>
+            }
+        </div>
+        @if (Model.MaxParticipants.HasValue && Model.MaxParticipants > 0)
+        {
+            <div style="margin-top:16px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.8rem;opacity:0.8;margin-bottom:6px;">
+                    <span>Enrollment Progress</span><span>@enrolled / @Model.MaxParticipants participants</span>
+                </div>
+                <div style="height:6px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden;">
+                    <div style="height:100%;width:@pct%;background:#fff;border-radius:3px;transition:width 0.5s;"></div>
+                </div>
+            </div>
+        }
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+        <a href="@Url.Action("Edit",new{id=Model.StudyId})" class="btn btn-glass btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.4);">
+            <i class="fa-solid fa-pen"></i> Edit
+        </a>
+        <a href="@Url.Action("Index")" class="btn btn-glass btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.4);">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;">
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-info"><div class="stat-value">@enrolled</div><div class="stat-label">Enrolled</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-calendar-check"></i></div>
+        <div class="stat-info"><div class="stat-value">@Model.Visits.Count(v => v.Status == "Completed")</div><div class="stat-label">Visits Done</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon sky"><i class="fa-regular fa-calendar"></i></div>
+        <div class="stat-info"><div class="stat-value">@Model.Visits.Count(v => v.Status == "Scheduled")</div><div class="stat-label">Scheduled</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon amber"><i class="fa-solid fa-file-signature"></i></div>
+        <div class="stat-info"><div class="stat-value">@Model.ConsentForms.Count(c => c.Status == "Active")</div><div class="stat-label">Active Consents</div></div>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <div>
+        <!-- Enrolled Participants -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-child-reaching" style="color:var(--primary);margin-right:8px;"></i>Enrolled Participants</span>
+            </div>
+            @if (Model.StudyEnrollments.Any())
+            {
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead><tr><th>Subject ID</th><th>Name</th><th>Age</th><th>Enrolled</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @foreach (var e in Model.StudyEnrollments)
+                            {
+                                <tr>
+                                    <td><code style="font-size:0.8rem;">@(e.SubjectId ?? "—")</code></td>
+                                    <td><a href="@Url.Action("Details","Participants",new{id=e.ParticipantId})" style="color:var(--primary);font-weight:600;text-decoration:none;">@e.Participant?.FirstName @e.Participant?.LastName</a></td>
+                                    <td>@(e.Participant != null ? $"{(int)((DateTime.Today - e.Participant.DateOfBirth).TotalDays / 365.25)} yrs" : "—")</td>
+                                    <td style="font-size:0.82rem;">@e.EnrollmentDate.ToString("MMM d, yyyy")</td>
+                                    <td><span class="badge badge-@e.Status.ToLower()">@e.Status</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else { <div class="card-body"><p style="color:var(--text-muted);">No participants enrolled yet.</p></div> }
+        </div>
+
+        <!-- Visits -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-calendar-check" style="color:var(--primary);margin-right:8px;"></i>Study Visits</span>
+            </div>
+            @if (Model.Visits.Any())
+            {
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead><tr><th>Participant</th><th>Type</th><th>Scheduled</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @foreach (var v in Model.Visits.OrderByDescending(x => x.ScheduledDate))
+                            {
+                                <tr>
+                                    <td><a href="@Url.Action("Details","Participants",new{id=v.ParticipantId})" style="color:var(--primary);font-weight:600;text-decoration:none;">@v.Participant?.FirstName @v.Participant?.LastName</a></td>
+                                    <td>@v.VisitType</td>
+                                    <td style="font-size:0.82rem;">@v.ScheduledDate.ToString("MMM d, yyyy")</td>
+                                    <td><span class="badge badge-@v.Status.ToLower()">@v.Status</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else { <div class="card-body"><p style="color:var(--text-muted);">No visits recorded.</p></div> }
+        </div>
+    </div>
+
+    <!-- Right: Sponsor / Info -->
+    <div>
+        <div class="card">
+            <div class="card-header"><span class="card-header-title">Study Details</span></div>
+            <div class="card-body">
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div class="info-item"><label>Sponsor</label><span>@(Model.Sponsor ?? "—")</span></div>
+                    <div class="info-item"><label>Phase</label><span>@(Model.Phase ?? "—")</span></div>
+                    <div class="info-item"><label>Max Enrollment</label><span>@(Model.MaxParticipants?.ToString() ?? "—")</span></div>
+                    <div class="info-item"><label>IRB Number</label><span>@(Model.IRBNumber ?? "—")</span></div>
+                    <div class="info-item"><label>Start Date</label><span>@Model.StartDate.ToString("MMMM d, yyyy")</span></div>
+                    <div class="info-item"><label>End Date</label><span>@(Model.EndDate.HasValue ? Model.EndDate.Value.ToString("MMMM d, yyyy") : "Ongoing")</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

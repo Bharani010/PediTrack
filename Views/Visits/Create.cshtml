@@ -1,0 +1,74 @@
+@model Visit
+@{
+    ViewData["Title"] = "Schedule Visit";
+    ViewData["PageTitle"] = "Schedule Visit";
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-calendar-plus" style="color:var(--primary);margin-right:10px;"></i>Schedule New Visit</h2>
+    </div>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</div>
+
+<div style="max-width:720px;">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+        <div class="card">
+            <div class="card-body">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Participant <span class="required">*</span></label>
+                        <select asp-for="ParticipantId" class="form-control" asp-items="ViewBag.Participants">
+                            <option value="">-- Select Participant --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Study <span class="required">*</span></label>
+                        <select asp-for="StudyId" class="form-control" asp-items="ViewBag.Studies">
+                            <option value="">-- Select Study --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Visit Type <span class="required">*</span></label>
+                        <select asp-for="VisitType" class="form-control" asp-items="ViewBag.VisitTypes">
+                            <option value="">-- Select Type --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Visit Number</label>
+                        <input asp-for="VisitNumber" type="number" class="form-control" min="1" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Scheduled Date <span class="required">*</span></label>
+                        <input asp-for="ScheduledDate" type="datetime-local" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select asp-for="Status" class="form-control" asp-items="ViewBag.Statuses"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input asp-for="Location" class="form-control" placeholder="e.g. Clinic A, Neuro Unit" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assigned Staff</label>
+                        <select asp-for="AssignedStaffId" class="form-control" asp-items="ViewBag.Staff">
+                            <option value="">-- Unassigned --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column:1/-1;">
+                        <label class="form-label">Notes</label>
+                        <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer" style="display:flex;gap:10px;justify-content:flex-end;">
+                <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-calendar-plus"></i> Schedule Visit</button>
+            </div>
+        </div>
+    </form>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

@@ -1,0 +1,22 @@
+@model Visit
+@{ ViewData["Title"] = "Delete Visit"; }
+<div style="max-width:520px;margin:0 auto;">
+    <div class="card" style="border-color:rgba(239,68,68,0.25);">
+        <div class="card-header" style="background:rgba(239,68,68,0.04);">
+            <span class="card-header-title" style="color:var(--danger);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:8px;"></i>Delete Visit</span>
+        </div>
+        <div class="card-body" style="text-align:center;padding:32px;">
+            <h4>Delete this @Model.VisitType visit?</h4>
+            <p style="color:var(--text-secondary);">Participant: <strong>@Model.Participant?.FirstName @Model.Participant?.LastName</strong></p>
+            <p style="color:var(--text-secondary);">Scheduled: @Model.ScheduledDate.ToString("MMMM d, yyyy")</p>
+        </div>
+        <div class="card-footer" style="display:flex;gap:10px;justify-content:center;">
+            <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Cancel</a>
+            <form asp-action="Delete" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="VisitId" />
+                <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete Visit</button>
+            </form>
+        </div>
+    </div>
+</div>

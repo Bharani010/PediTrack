@@ -1,0 +1,25 @@
+@model Study
+@{ ViewData["Title"] = "Delete Study"; }
+<div style="max-width:520px;margin:0 auto;">
+    <div class="card" style="border-color:rgba(239,68,68,0.25);">
+        <div class="card-header" style="background:rgba(239,68,68,0.04);">
+            <span class="card-header-title" style="color:var(--danger);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:8px;"></i>Confirm Delete Study</span>
+        </div>
+        <div class="card-body" style="text-align:center;padding:32px;">
+            <div style="width:64px;height:64px;background:rgba(239,68,68,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.8rem;color:var(--danger);">
+                <i class="fa-solid fa-flask"></i>
+            </div>
+            <h4>Delete "@Model.StudyName"?</h4>
+            <p style="color:var(--text-secondary);font-size:0.88rem;">Study Code: <strong>@Model.StudyCode</strong></p>
+            <p style="color:var(--text-muted);font-size:0.85rem;">All associated enrollments and visits will be removed. This cannot be undone.</p>
+        </div>
+        <div class="card-footer" style="display:flex;gap:10px;justify-content:center;">
+            <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Cancel</a>
+            <form asp-action="Delete" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="StudyId" />
+                <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete Study</button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,72 @@
+@model List<ParticipantReportRow>
+@{
+    ViewData["Title"] = "Print Report";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>PediTrack — Participant Report</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; margin: 0; padding: 30px; font-size: 13px; }
+        .rpt-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #ea580c; padding-bottom: 14px; margin-bottom: 20px; }
+        .rpt-header h1 { font-size: 1.3rem; margin: 0 0 4px; color: #1c0a00; }
+        .rpt-header p  { margin: 0; color: #666; font-size: 0.8rem; }
+        .rpt-logo { font-size: 1.5rem; color: #ea580c; font-weight: 800; letter-spacing: -1px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #fff4ed; color: #7c2d12; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 10px; border-bottom: 2px solid #fed7aa; text-align: left; }
+        td { padding: 8px 10px; border-bottom: 1px solid #e7e5e4; font-size: 0.82rem; }
+        tr:nth-child(even) td { background: #fafaf9; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
+        .badge-active    { background: #d1fae5; color: #065f46; }
+        .badge-completed { background: #ede9fe; color: #5b21b6; }
+        .badge-withdrawn { background: #fef3c7; color: #78350f; }
+        .rpt-footer { margin-top: 20px; font-size: 0.75rem; color: #999; text-align: center; border-top: 1px solid #ddd; padding-top: 12px; }
+        @@media print { button { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="rpt-header">
+        <div>
+            <h1><i>PediTrack</i> — Participant Status Report</h1>
+            <p>Meridian Children's Hospital · Pediatrics Research</p>
+            <p>Generated: @DateTime.Now.ToString("MMMM d, yyyy h:mm tt") · Total records: @Model.Count</p>
+        </div>
+        <div class="rpt-logo">PT</div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>MRN</th><th>Name</th><th>Age</th><th>Gender</th>
+                <th>Study</th><th>Enrolled</th><th>Visits</th><th>Consent</th><th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>@r.MRN</td>
+                    <td><strong>@r.FullName</strong></td>
+                    <td>@r.Age</td>
+                    <td>@r.Gender</td>
+                    <td>@r.StudyName</td>
+                    <td>@r.EnrollmentDate.ToString("MM/dd/yyyy")</td>
+                    <td>@r.CompletedVisits / @r.TotalVisits</td>
+                    <td>@r.ConsentStatus</td>
+                    <td><span class="badge badge-@r.Status.ToLower()">@r.Status</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="rpt-footer">
+        PediTrack v1.0 · Meridian Children's Hospital Pediatrics Research · CONFIDENTIAL — FOR INTERNAL USE ONLY
+    </div>
+
+    <button onclick="window.print()" style="margin-top:20px;padding:10px 20px;background:#ea580c;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.9rem;">
+        🖨 Print Report
+    </button>
+</body>
+</html>

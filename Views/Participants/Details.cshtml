@@ -1,0 +1,172 @@
+@model Participant
+@{
+    ViewData["Title"] = $"{Model.FirstName} {Model.LastName}";
+    ViewData["PageTitle"] = "Participant Details";
+    var initials = $"{Model.FirstName[0]}{Model.LastName[0]}".ToUpper();
+}
+
+<!-- Profile Header -->
+<div class="profile-header" style="display:flex;gap:20px;align-items:center;">
+    <div class="profile-avatar">@initials</div>
+    <div class="profile-info">
+        <p class="profile-name">@Model.FirstName @Model.LastName</p>
+        <p class="profile-sub">Guardian: @Model.GuardianName</p>
+        <div class="profile-meta">
+            <div class="profile-meta-item"><strong>@Model.MRN</strong>Medical Record #</div>
+            <div class="profile-meta-item"><strong>@Model.Age years</strong>Age</div>
+            <div class="profile-meta-item"><strong>@Model.Gender</strong>Gender</div>
+            <div class="profile-meta-item"><strong>@Model.DateOfBirth.ToString("MMM d, yyyy")</strong>Date of Birth</div>
+            <div class="profile-meta-item"><strong>@Model.EnrollmentDate.ToString("MMM d, yyyy")</strong>Enrolled</div>
+        </div>
+    </div>
+    <div style="margin-left:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+        <span class="badge badge-@Model.Status.ToLower()" style="font-size:0.85rem;padding:5px 14px;">@Model.Status</span>
+        <div style="display:flex;gap:8px;">
+            <a href="@Url.Action("Edit",new{id=Model.ParticipantId})" class="btn btn-glass btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.4);">
+                <i class="fa-solid fa-pen"></i> Edit
+            </a>
+            <a href="@Url.Action("Index")" class="btn btn-glass btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.4);">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <div>
+        <!-- Contact Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-address-card" style="color:var(--primary);margin-right:8px;"></i>Participant Information</span>
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    <div class="info-item"><label>Guardian Phone</label><span>@(Model.GuardianPhone ?? "—")</span></div>
+                    <div class="info-item"><label>Guardian Email</label><span>@(Model.GuardianEmail ?? "—")</span></div>
+                    <div class="info-item" style="grid-column:1/-1;"><label>Address</label><span>@(Model.Address ?? "—")</span></div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                    {
+                        <div class="info-item" style="grid-column:1/-1;"><label>Notes</label><span>@Model.Notes</span></div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Study Enrollments -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-flask" style="color:var(--primary);margin-right:8px;"></i>Study Enrollments (@Model.StudyEnrollments.Count)</span>
+            </div>
+            @if (Model.StudyEnrollments.Any())
+            {
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead><tr><th>Study</th><th>Subject ID</th><th>Enrolled</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @foreach (var e in Model.StudyEnrollments)
+                            {
+                                <tr>
+                                    <td><a href="@Url.Action("Details","Studies",new{id=e.StudyId})" style="color:var(--primary);font-weight:600;text-decoration:none;">@e.Study?.StudyCode</a><br/><span style="font-size:0.78rem;color:var(--text-muted);">@e.Study?.StudyName</span></td>
+                                    <td><code style="font-size:0.8rem;">@(e.SubjectId ?? "—")</code></td>
+                                    <td style="font-size:0.82rem;">@e.EnrollmentDate.ToString("MMM d, yyyy")</td>
+                                    <td><span class="badge badge-@e.Status.ToLower()">@e.Status</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else { <div class="card-body"><p style="color:var(--text-muted);">Not enrolled in any study.</p></div> }
+        </div>
+
+        <!-- Visits -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-calendar-check" style="color:var(--primary);margin-right:8px;"></i>Visits (@Model.Visits.Count)</span>
+                <a href="@Url.Action("Create","Visits",new{participantId=Model.ParticipantId})" class="btn btn-glass btn-sm">
+                    <i class="fa-solid fa-plus"></i> Schedule Visit
+                </a>
+            </div>
+            @if (Model.Visits.Any())
+            {
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead><tr><th>Type</th><th>Study</th><th>Scheduled</th><th>Completed</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @foreach (var v in Model.Visits.OrderByDescending(x => x.ScheduledDate))
+                            {
+                                <tr>
+                                    <td style="font-weight:600;">@v.VisitType <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">#@v.VisitNumber</span></td>
+                                    <td style="font-size:0.82rem;color:var(--text-secondary);">@v.Study?.StudyCode</td>
+                                    <td style="font-size:0.82rem;">@v.ScheduledDate.ToString("MMM d, yyyy")</td>
+                                    <td style="font-size:0.82rem;">@(v.CompletedDate.HasValue ? v.CompletedDate.Value.ToString("MMM d, yyyy") : "—")</td>
+                                    <td><span class="badge badge-@v.Status.ToLower()">@v.Status</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else { <div class="card-body"><p style="color:var(--text-muted);">No visits on record.</p></div> }
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div>
+        <!-- Consent Forms -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-file-signature" style="color:var(--primary);margin-right:8px;"></i>Consent Forms</span>
+                <a href="@Url.Action("Create","ConsentForms",new{participantId=Model.ParticipantId})" class="btn btn-glass btn-sm">
+                    <i class="fa-solid fa-plus"></i> Add
+                </a>
+            </div>
+            <div class="card-body" style="padding:12px;">
+                @foreach (var c in Model.ConsentForms.OrderByDescending(x => x.ConsentDate))
+                {
+                    <div style="padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <span style="font-weight:600;font-size:0.88rem;">@c.Study?.StudyCode</span>
+                            <span class="badge badge-@c.Status.ToLower()">@c.Status</span>
+                        </div>
+                        <div style="font-size:0.78rem;color:var(--text-muted);">
+                            v@c.Version · Signed: @c.ConsentDate.ToString("MMM d, yyyy")<br/>
+                            Expires: @(c.ExpirationDate.HasValue ? c.ExpirationDate.Value.ToString("MMM d, yyyy") : "—")
+                        </div>
+                        @if (c.ReconsentRequired)
+                        {
+                            <div class="warning-banner" style="margin-top:6px;padding:6px 10px;">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Re-consent required
+                            </div>
+                        }
+                    </div>
+                }
+                @if (!Model.ConsentForms.Any())
+                {
+                    <p style="color:var(--text-muted);font-size:0.85rem;">No consent forms on record.</p>
+                }
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-bolt" style="color:var(--primary);margin-right:8px;"></i>Quick Actions</span>
+            </div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:8px;">
+                <a href="@Url.Action("Create","Visits",new{participantId=Model.ParticipantId})" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-calendar-plus"></i> Schedule New Visit
+                </a>
+                <a href="@Url.Action("Create","ConsentForms",new{participantId=Model.ParticipantId})" class="btn btn-glass w-100">
+                    <i class="fa-solid fa-file-signature"></i> Record Consent
+                </a>
+                <a href="@Url.Action("Edit",new{id=Model.ParticipantId})" class="btn btn-outline-primary w-100">
+                    <i class="fa-solid fa-pen"></i> Edit Record
+                </a>
+                <a href="@Url.Action("Delete",new{id=Model.ParticipantId})" class="btn btn-danger w-100">
+                    <i class="fa-solid fa-trash"></i> Remove Participant
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

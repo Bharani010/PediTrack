@@ -1,0 +1,12 @@
+@{
+    ViewData["Title"] = "Error";
+    ViewData["PageTitle"] = "Error";
+}
+<div style="max-width:480px;margin:60px auto;text-align:center;">
+    <div style="font-size:4rem;color:var(--danger);margin-bottom:16px;"><i class="fa-solid fa-circle-exclamation"></i></div>
+    <h2 style="margin-bottom:8px;">Something went wrong</h2>
+    <p style="color:var(--text-secondary);">An unexpected error occurred. Please try again or contact your system administrator.</p>
+    <a href="@Url.Action("Index","Home")" class="btn btn-primary" style="margin-top:20px;">
+        <i class="fa-solid fa-house"></i> Return to Dashboard
+    </a>
+</div>

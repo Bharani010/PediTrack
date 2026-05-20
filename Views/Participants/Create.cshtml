@@ -1,0 +1,111 @@
+@model Participant
+@{
+    ViewData["Title"] = "Add Participant";
+    ViewData["PageTitle"] = "Add Participant";
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-user-plus" style="color:var(--primary);margin-right:10px;"></i>Add New Participant</h2>
+        <p>Register a new pediatric research participant</p>
+    </div>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back to List</a>
+</div>
+
+<div style="max-width:860px;">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+        <div class="card">
+            <div class="card-body">
+                <!-- Personal Info -->
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fa-solid fa-id-card" style="margin-right:6px;"></i>Personal Information</div>
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label class="form-label" asp-for="MRN">MRN <span class="required">*</span></label>
+                            <input asp-for="MRN" class="form-control" placeholder="e.g. MCH-00011" />
+                            <span asp-validation-for="MRN" class="field-validation-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="FirstName">First Name <span class="required">*</span></label>
+                            <input asp-for="FirstName" class="form-control" placeholder="First name" />
+                            <span asp-validation-for="FirstName" class="field-validation-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="LastName">Last Name <span class="required">*</span></label>
+                            <input asp-for="LastName" class="form-control" placeholder="Last name" />
+                            <span asp-validation-for="LastName" class="field-validation-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="DateOfBirth">Date of Birth <span class="required">*</span></label>
+                            <input asp-for="DateOfBirth" type="date" class="form-control" />
+                            <span asp-validation-for="DateOfBirth" class="field-validation-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="Gender">Gender <span class="required">*</span></label>
+                            <select asp-for="Gender" class="form-control">
+                                <option value="">-- Select --</option>
+                                <option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option>
+                            </select>
+                            <span asp-validation-for="Gender" class="field-validation-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="Status">Status</label>
+                            <select asp-for="Status" class="form-control">
+                                <option>Active</option><option>Pending</option><option>Withdrawn</option><option>Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" asp-for="Address">Address</label>
+                        <input asp-for="Address" class="form-control" placeholder="Street address, city, state, zip" />
+                    </div>
+                </div>
+
+                <!-- Guardian Info -->
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fa-solid fa-people-roof" style="margin-right:6px;"></i>Guardian / Parent Contact</div>
+                    <div class="form-grid-3">
+                        <div class="form-group" style="grid-column:1/3;">
+                            <label class="form-label" asp-for="GuardianName">Guardian Full Name <span class="required">*</span></label>
+                            <input asp-for="GuardianName" class="form-control" placeholder="Legal guardian name" />
+                            <span asp-validation-for="GuardianName" class="field-validation-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="EnrollmentDate">Enrollment Date</label>
+                            <input asp-for="EnrollmentDate" type="date" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="GuardianPhone">Guardian Phone <span class="required">*</span></label>
+                            <input asp-for="GuardianPhone" class="form-control" placeholder="713-555-0000" />
+                            <span asp-validation-for="GuardianPhone" class="field-validation-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="GuardianEmail">Guardian Email</label>
+                            <input asp-for="GuardianEmail" type="email" class="form-control" placeholder="email@example.com" />
+                            <span asp-validation-for="GuardianEmail" class="field-validation-error"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fa-solid fa-note-sticky" style="margin-right:6px;"></i>Additional Notes</div>
+                    <div class="form-group mb-0">
+                        <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Any relevant clinical notes or observations…"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer" style="display:flex;gap:10px;justify-content:flex-end;">
+                <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Participant</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,93 @@
+@model Study
+@{
+    ViewData["Title"] = "Edit Study";
+    ViewData["PageTitle"] = "Edit Study";
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-pen" style="color:var(--primary);margin-right:10px;"></i>Edit Study</h2>
+        <p><code>@Model.StudyCode</code> — @Model.StudyName</p>
+    </div>
+    <a href="@Url.Action("Details",new{id=Model.StudyId})" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</div>
+
+<div style="max-width:860px;">
+    <form asp-action="Edit" asp-route-id="@Model.StudyId" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="StudyId" />
+        <input type="hidden" asp-for="CreatedAt" />
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+        <div class="card">
+            <div class="card-body">
+                <div class="form-section">
+                    <div class="form-section-title">Study Identification</div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label" asp-for="StudyCode">Study Code <span class="required">*</span></label>
+                            <input asp-for="StudyCode" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="IRBNumber">IRB Number</label>
+                            <input asp-for="IRBNumber" class="form-control" />
+                        </div>
+                        <div class="form-group" style="grid-column:1/-1;">
+                            <label class="form-label" asp-for="StudyName">Study Name <span class="required">*</span></label>
+                            <input asp-for="StudyName" class="form-control" />
+                        </div>
+                        <div class="form-group" style="grid-column:1/-1;">
+                            <label class="form-label" asp-for="Description">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title">Study Parameters</div>
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label class="form-label" asp-for="Status">Status</label>
+                            <select asp-for="Status" class="form-control">
+                                <option>Active</option><option>Recruiting</option><option>Suspended</option><option>Closed</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="Phase">Phase</label>
+                            <select asp-for="Phase" class="form-control">
+                                <option value="">-- Select --</option>
+                                <option>Phase I</option><option>Phase II</option><option>Phase III</option><option>Phase IV</option><option>Observational</option><option>Pilot</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="MaxParticipants">Max Participants</label>
+                            <input asp-for="MaxParticipants" type="number" class="form-control" min="1" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="StartDate">Start Date</label>
+                            <input asp-for="StartDate" type="date" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="EndDate">End Date</label>
+                            <input asp-for="EndDate" type="date" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="PrincipalInvestigatorId">Principal Investigator</label>
+                            <select asp-for="PrincipalInvestigatorId" class="form-control"
+                                    asp-items="@(new SelectList(ViewBag.Investigators, "InvestigatorId", "FullName"))">
+                                <option value="">-- Select PI --</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column:1/-1;">
+                            <label class="form-label" asp-for="Sponsor">Sponsor</label>
+                            <input asp-for="Sponsor" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer" style="display:flex;gap:10px;justify-content:flex-end;">
+                <a href="@Url.Action("Details",new{id=Model.StudyId})" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+            </div>
+        </div>
+    </form>
+</div>
+@section Scripts { @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} }

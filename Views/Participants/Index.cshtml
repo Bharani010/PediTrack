@@ -1,0 +1,96 @@
+@model List<Participant>
+@{
+    ViewData["Title"] = "Participants";
+    ViewData["PageTitle"] = "Participants";
+    var currentStatus = ViewBag.Status as string ?? "All";
+    var statuses = new[] { "All", "Active", "Pending", "Withdrawn", "Completed" };
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-child-reaching" style="color:var(--primary);margin-right:10px;"></i>Participants</h2>
+        <p>Manage all enrolled pediatric research participants</p>
+    </div>
+    <div class="page-header-actions">
+        <a href="@Url.Action("Create")" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Add Participant
+        </a>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<form method="get" class="filter-bar">
+    <div class="search-input-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input name="search" class="form-control" placeholder="Search by name or MRN…" value="@ViewBag.Search" />
+    </div>
+    <select name="status" class="form-control" style="max-width:160px;" onchange="this.form.submit()">
+        @foreach (var s in statuses)
+        {
+            <option value="@s" selected="@(currentStatus == s)">@s</option>
+        }
+    </select>
+    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter"></i> Filter</button>
+    @if (!string.IsNullOrWhiteSpace(ViewBag.Search as string) || currentStatus != "All")
+    {
+        <a href="@Url.Action("Index")" class="btn btn-secondary">Clear</a>
+    }
+</form>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-header-title">@Model.Count participant@(Model.Count == 1 ? "" : "s") found</span>
+        <a href="@Url.Action("Participants","Reports")" class="btn btn-glass btn-sm">
+            <i class="fa-solid fa-file-export"></i> Export Report
+        </a>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>MRN</th><th>Name</th><th>Age</th><th>Gender</th>
+                        <th>Guardian</th><th>Enrolled</th><th>Status</th><th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td><code style="font-size:0.82rem;color:var(--primary);background:var(--primary-light);padding:2px 7px;border-radius:4px;">@p.MRN</code></td>
+                            <td>
+                                <a href="@Url.Action("Details",new{id=p.ParticipantId})" style="font-weight:600;color:var(--text-primary);text-decoration:none;">
+                                    @p.FirstName @p.LastName
+                                </a>
+                            </td>
+                            <td>@p.Age yrs</td>
+                            <td>@p.Gender</td>
+                            <td style="font-size:0.85rem;color:var(--text-secondary);">@p.GuardianName</td>
+                            <td style="font-size:0.82rem;">@p.EnrollmentDate.ToString("MMM d, yyyy")</td>
+                            <td><span class="badge badge-@p.Status.ToLower()">@p.Status</span></td>
+                            <td style="text-align:right;">
+                                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                                    <a href="@Url.Action("Details",new{id=p.ParticipantId})" class="btn btn-glass btn-sm btn-icon" title="View"><i class="fa-solid fa-eye"></i></a>
+                                    <a href="@Url.Action("Edit",new{id=p.ParticipantId})" class="btn btn-outline-primary btn-sm btn-icon" title="Edit"><i class="fa-solid fa-pen"></i></a>
+                                    <a href="@Url.Action("Delete",new{id=p.ParticipantId})" class="btn btn-danger btn-sm btn-icon" title="Delete"><i class="fa-solid fa-trash"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-child-reaching"></i></div>
+            <h4>No participants found</h4>
+            <p>Try adjusting your filters or add a new participant.</p>
+            <a href="@Url.Action("Create")" class="btn btn-primary" style="margin-top:12px;">
+                <i class="fa-solid fa-plus"></i> Add First Participant
+            </a>
+        </div>
+    }
+</div>

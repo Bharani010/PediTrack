@@ -1,0 +1,87 @@
+@model ReportViewModel
+@{
+    ViewData["Title"] = "Consent Report";
+    ViewData["PageTitle"] = "Consent Form Report";
+}
+
+<div class="page-header no-print">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-file-signature" style="color:var(--warning);margin-right:10px;"></i>Consent Form Report</h2>
+        <p>@Model.TotalRecords consent record@(Model.TotalRecords == 1 ? "" : "s") found</p>
+    </div>
+    <div class="page-header-actions">
+        <button onclick="window.print()" class="btn btn-glass"><i class="fa-solid fa-print"></i> Print</button>
+        <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    </div>
+</div>
+
+<div class="filter-bar no-print">
+    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;width:100%;align-items:flex-end;">
+        <div style="flex:1;min-width:160px;">
+            <label style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Study</label>
+            <select name="studyId" class="form-control">
+                <option value="">All Studies</option>
+                @foreach (var s in Model.AvailableStudies)
+                {
+                    <option value="@s.StudyId" selected="@(Model.StudyId == s.StudyId)">@s.StudyCode</option>
+                }
+            </select>
+        </div>
+        <div style="min-width:140px;">
+            <label style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px;">Status</label>
+            <select name="status" class="form-control">
+                <option value="">All</option>
+                @foreach (var st in new[]{"Active","Expired","Revoked","Superseded"})
+                { <option value="@st" selected="@(Model.Status == st)">@st</option> }
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="align-self:flex-end;"><i class="fa-solid fa-filter"></i> Apply</button>
+        <a href="@Url.Action("Consents")" class="btn btn-secondary" style="align-self:flex-end;">Clear</a>
+    </form>
+</div>
+
+@if (Model.StatusBreakdown.Any())
+{
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;" class="no-print">
+        @foreach (var kv in Model.StatusBreakdown)
+        {
+            <div style="background:var(--bg-white);border:1px solid var(--border);border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-sm);">
+                <span class="badge badge-@kv.Key.ToLower()">@kv.Key</span>
+                <span style="font-size:1.1rem;font-weight:800;">@kv.Value</span>
+            </div>
+        }
+    </div>
+}
+
+<div class="card">
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr><th>Participant</th><th>Study</th><th>Version</th><th>Consent Date</th><th>Expires</th><th>Signed</th><th>Status</th><th>Re-consent?</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model.ConsentForms)
+                {
+                    var isExpiring = c.ExpirationDate.HasValue && c.ExpirationDate.Value <= DateTime.Today.AddDays(30) && c.Status == "Active";
+                    <tr @(isExpiring ? "style=background:rgba(245,158,11,0.05);" : "")>
+                        <td style="font-weight:600;">@c.Participant?.FirstName @c.Participant?.LastName</td>
+                        <td><code style="font-size:0.8rem;color:var(--primary);">@c.Study?.StudyCode</code></td>
+                        <td>v@c.Version</td>
+                        <td style="font-size:0.82rem;">@c.ConsentDate.ToString("MMM d, yyyy")</td>
+                        <td style="font-size:0.82rem;">
+                            @(c.ExpirationDate.HasValue ? c.ExpirationDate.Value.ToString("MMM d, yyyy") : "—")
+                            @if (isExpiring) { <span style="color:var(--warning);font-size:0.75rem;display:block;"><i class="fa-solid fa-clock"></i> Expiring soon</span> }
+                        </td>
+                        <td>@(c.SignedByGuardian ? "✓" : "✗")</td>
+                        <td><span class="badge badge-@c.Status.ToLower()">@c.Status</span></td>
+                        <td style="text-align:center;">@(c.ReconsentRequired ? "⚠ Yes" : "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!Model.ConsentForms.Any())
+    {
+        <div class="empty-state"><div class="empty-state-icon"><i class="fa-solid fa-file-signature"></i></div><h4>No consent records match your filters</h4></div>
+    }
+</div>
