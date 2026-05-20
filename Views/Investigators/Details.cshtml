@@ -1,0 +1,152 @@
+@model Investigator
+@{
+    ViewData["Title"] = $"{Model.FirstName} {Model.LastName}";
+    ViewData["PageTitle"] = "Investigator Profile";
+    var initials = $"{Model.FirstName[0]}{Model.LastName[0]}".ToUpper();
+}
+
+<!-- Profile Header -->
+<div class="profile-header" style="display:flex;gap:20px;align-items:center;">
+    <div class="profile-avatar">@initials</div>
+    <div class="profile-info">
+        <p class="profile-name">@Model.Title @Model.FirstName @Model.LastName</p>
+        <p class="profile-sub">@Model.Role · @Model.Department</p>
+        <div class="profile-meta">
+            <div class="profile-meta-item"><strong>@Model.Email</strong>Email</div>
+            @if (!string.IsNullOrWhiteSpace(Model.Phone))
+            {
+                <div class="profile-meta-item"><strong>@Model.Phone</strong>Phone</div>
+            }
+            <div class="profile-meta-item"><strong>@(Model.Institution ?? "—")</strong>Institution</div>
+            <div class="profile-meta-item"><strong>@Model.Studies.Count</strong>Studies</div>
+            <div class="profile-meta-item"><strong>@Model.AssignedVisits.Count</strong>Visits</div>
+        </div>
+    </div>
+    <div style="margin-left:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+        <span class="badge badge-@Model.Status.ToLower()" style="font-size:0.85rem;padding:5px 14px;">@Model.Status</span>
+        <div style="display:flex;gap:8px;">
+            <a href="@Url.Action("Edit",new{id=Model.InvestigatorId})" class="btn btn-glass btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.4);">
+                <i class="fa-solid fa-pen"></i> Edit
+            </a>
+            <a href="@Url.Action("Index")" class="btn btn-glass btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.4);">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <div>
+        <!-- Assigned Studies -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-flask" style="color:var(--primary);margin-right:8px;"></i>Assigned Studies (@Model.Studies.Count)</span>
+            </div>
+            @if (Model.Studies.Any())
+            {
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead><tr><th>Code</th><th>Study Name</th><th>Phase</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @foreach (var s in Model.Studies.OrderBy(x => x.StudyCode))
+                            {
+                                <tr>
+                                    <td>
+                                        <a href="@Url.Action("Details","Studies",new{id=s.StudyId})"
+                                           style="color:var(--primary);font-weight:600;text-decoration:none;">@s.StudyCode</a>
+                                    </td>
+                                    <td style="font-size:0.85rem;">@s.StudyName</td>
+                                    <td style="font-size:0.82rem;color:var(--text-secondary);">@(s.Phase ?? "—")</td>
+                                    <td><span class="badge badge-@s.Status.ToLower()">@s.Status</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="card-body"><p style="color:var(--text-muted);">Not assigned to any studies.</p></div>
+            }
+        </div>
+
+        <!-- Assigned Visits -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-calendar-check" style="color:var(--primary);margin-right:8px;"></i>Assigned Visits (@Model.AssignedVisits.Count)</span>
+            </div>
+            @if (Model.AssignedVisits.Any())
+            {
+                <div class="table-wrapper">
+                    <table class="table">
+                        <thead><tr><th>Participant</th><th>Type</th><th>Scheduled</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @foreach (var v in Model.AssignedVisits.OrderByDescending(x => x.ScheduledDate).Take(20))
+                            {
+                                <tr>
+                                    <td>
+                                        <a href="@Url.Action("Details","Participants",new{id=v.ParticipantId})"
+                                           style="color:var(--primary);font-weight:600;text-decoration:none;">
+                                            @v.Participant?.FirstName @v.Participant?.LastName
+                                        </a>
+                                    </td>
+                                    <td style="font-size:0.85rem;">@v.VisitType</td>
+                                    <td style="font-size:0.82rem;">@v.ScheduledDate.ToString("MMM d, yyyy")</td>
+                                    <td><span class="badge badge-@v.Status.ToLower()">@v.Status</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="card-body"><p style="color:var(--text-muted);">No visits assigned.</p></div>
+            }
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div>
+        <!-- Contact Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-address-card" style="color:var(--primary);margin-right:8px;"></i>Contact & Details</span>
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    <div class="info-item"><label>Title</label><span>@(Model.Title ?? "—")</span></div>
+                    <div class="info-item"><label>Role</label><span>@Model.Role</span></div>
+                    <div class="info-item"><label>Department</label><span>@(Model.Department ?? "—")</span></div>
+                    <div class="info-item"><label>Institution</label><span>@(Model.Institution ?? "—")</span></div>
+                    <div class="info-item"><label>Email</label><span style="word-break:break-all;">@Model.Email</span></div>
+                    <div class="info-item"><label>Phone</label><span>@(Model.Phone ?? "—")</span></div>
+                    <div class="info-item"><label>Status</label><span><span class="badge badge-@Model.Status.ToLower()">@Model.Status</span></span></div>
+                    <div class="info-item"><label>Added</label><span style="font-size:0.82rem;color:var(--text-muted);">@Model.CreatedAt.ToString("MMM d, yyyy")</span></div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                    {
+                        <div class="info-item" style="grid-column:1/-1;"><label>Notes</label><span>@Model.Notes</span></div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-bolt" style="color:var(--primary);margin-right:8px;"></i>Quick Actions</span>
+            </div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:8px;">
+                <a href="@Url.Action("Edit",new{id=Model.InvestigatorId})" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-pen"></i> Edit Profile
+                </a>
+                <a href="@Url.Action("Index")" class="btn btn-glass w-100">
+                    <i class="fa-solid fa-users"></i> All Investigators
+                </a>
+                <a href="@Url.Action("Delete",new{id=Model.InvestigatorId})" class="btn btn-danger w-100">
+                    <i class="fa-solid fa-trash"></i> Remove Member
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

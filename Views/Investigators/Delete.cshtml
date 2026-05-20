@@ -1,0 +1,71 @@
+@model Investigator
+@{
+    ViewData["Title"] = "Remove Investigator";
+    ViewData["PageTitle"] = "Remove Investigator";
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-trash" style="color:var(--danger);margin-right:10px;"></i>Remove Investigator</h2>
+        <p>This action cannot be undone</p>
+    </div>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</div>
+
+<div style="max-width:600px;">
+    <div class="card" style="border-color:rgba(239,68,68,0.3);">
+        <div class="card-header" style="background:rgba(239,68,68,0.05);">
+            <span class="card-header-title" style="color:var(--danger);">
+                <i class="fa-solid fa-triangle-exclamation" style="margin-right:8px;"></i>Confirm Deletion
+            </span>
+        </div>
+        <div class="card-body">
+            <p style="margin-bottom:20px;color:var(--text-secondary);">
+                You are about to permanently remove the following staff member:
+            </p>
+
+            <div style="display:flex;gap:16px;align-items:center;padding:16px;background:var(--bg-secondary);border-radius:10px;margin-bottom:20px;">
+                @{
+                    var initials = $"{Model.FirstName[0]}{Model.LastName[0]}".ToUpper();
+                }
+                <div style="width:52px;height:52px;background:linear-gradient(135deg,var(--primary),var(--accent2));border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.1rem;flex-shrink:0;">
+                    @initials
+                </div>
+                <div>
+                    <div style="font-weight:700;font-size:1rem;">@Model.Title @Model.FirstName @Model.LastName</div>
+                    <div style="font-size:0.85rem;color:var(--text-muted);">@Model.Role · @Model.Department</div>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item"><label>Email</label><span>@Model.Email</span></div>
+                <div class="info-item"><label>Status</label><span><span class="badge badge-@Model.Status.ToLower()">@Model.Status</span></span></div>
+                <div class="info-item"><label>Assigned Studies</label><span>@Model.Studies.Count</span></div>
+                <div class="info-item"><label>Assigned Visits</label><span>@Model.AssignedVisits.Count</span></div>
+            </div>
+
+            @if (Model.Studies.Any() || Model.AssignedVisits.Any())
+            {
+                <div class="warning-banner" style="margin-top:16px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    This member is linked to <strong>@Model.Studies.Count study(ies)</strong> and <strong>@Model.AssignedVisits.Count visit(s)</strong>. Removing them may affect those records.
+                </div>
+            }
+            else
+            {
+                <div class="warning-banner" style="margin-top:16px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Deleting this staff member record is permanent and cannot be recovered.
+                </div>
+            }
+        </div>
+        <div class="card-footer" style="display:flex;gap:10px;justify-content:flex-end;">
+            <a href="@Url.Action("Details",new{id=Model.InvestigatorId})" class="btn btn-secondary">Cancel</a>
+            <form asp-action="Delete" method="post" style="display:inline;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.InvestigatorId" />
+                <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete Permanently</button>
+            </form>
+        </div>
+    </div>
+</div>

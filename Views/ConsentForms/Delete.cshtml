@@ -1,0 +1,63 @@
+@model ConsentForm
+@{
+    ViewData["Title"] = "Remove Consent Form";
+    ViewData["PageTitle"] = "Remove Consent Form";
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-trash" style="color:var(--danger);margin-right:10px;"></i>Remove Consent Form</h2>
+        <p>This action cannot be undone</p>
+    </div>
+    <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</div>
+
+<div style="max-width:600px;">
+    <div class="card" style="border-color:rgba(239,68,68,0.3);">
+        <div class="card-header" style="background:rgba(239,68,68,0.05);">
+            <span class="card-header-title" style="color:var(--danger);">
+                <i class="fa-solid fa-triangle-exclamation" style="margin-right:8px;"></i>Confirm Deletion
+            </span>
+        </div>
+        <div class="card-body">
+            <p style="margin-bottom:20px;color:var(--text-secondary);">
+                You are about to permanently delete the following consent record:
+            </p>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Participant</label>
+                    <span style="font-weight:600;">@Model.Participant?.FirstName @Model.Participant?.LastName</span>
+                </div>
+                <div class="info-item">
+                    <label>Study</label>
+                    <span>@Model.Study?.StudyCode — @Model.Study?.StudyName</span>
+                </div>
+                <div class="info-item">
+                    <label>Form Version</label>
+                    <span><code>v@Model.Version</code></span>
+                </div>
+                <div class="info-item">
+                    <label>Consent Date</label>
+                    <span>@Model.ConsentDate.ToString("MMMM d, yyyy")</span>
+                </div>
+                <div class="info-item">
+                    <label>Status</label>
+                    <span><span class="badge badge-@Model.Status.ToLower()">@Model.Status</span></span>
+                </div>
+            </div>
+
+            <div class="warning-banner" style="margin-top:16px;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                Deleting this consent record is permanent and cannot be recovered.
+            </div>
+        </div>
+        <div class="card-footer" style="display:flex;gap:10px;justify-content:flex-end;">
+            <a href="@Url.Action("Details",new{id=Model.ConsentFormId})" class="btn btn-secondary">Cancel</a>
+            <form asp-action="Delete" method="post" style="display:inline;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.ConsentFormId" />
+                <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash"></i> Delete Permanently</button>
+            </form>
+        </div>
+    </div>
+</div>

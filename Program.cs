@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation();
 
-// Entity Framework - SQL Server
+// Entity Framework - SQL Server Express
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -45,7 +45,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Rotativa for PDF reports
-Rotativa.AspNetCore.RotativaConfiguration.Setup(app.Environment.WebRootPath, "Rotativa");
+// Rotativa for PDF reports (optional - skipped if wkhtmltopdf not installed)
+try { Rotativa.AspNetCore.RotativaConfiguration.Setup(app.Environment.WebRootPath); }
+catch { /* wkhtmltopdf not installed - print via browser instead */ }
 
 app.Run();

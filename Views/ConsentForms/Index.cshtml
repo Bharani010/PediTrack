@@ -1,0 +1,113 @@
+@model List<ConsentForm>
+@{
+    ViewData["Title"] = "Consent Forms";
+    ViewData["PageTitle"] = "Consent Forms";
+    var statuses = new[] { "All", "Active", "Expired", "Revoked", "Superseded" };
+    var current = ViewBag.Status as string ?? "All";
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-file-signature" style="color:var(--primary);margin-right:10px;"></i>Consent Forms</h2>
+        <p>Participant consent tracking across all studies</p>
+    </div>
+    <a href="@Url.Action("Create")" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Record Consent</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success" style="margin-bottom:16px;padding:12px 16px;border-radius:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#065f46;display:flex;gap:10px;align-items:center;">
+        <i class="fa-solid fa-circle-check"></i> @TempData["Success"]
+    </div>
+}
+
+<!-- Status Filter Tabs -->
+<div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;">
+    @foreach (var s in statuses)
+    {
+        var active = s == current;
+        <a href="@Url.Action("Index", new { status = s == "All" ? null : s })"
+           class="btn btn-sm @(active ? "btn-primary" : "btn-glass")">@s</a>
+    }
+</div>
+
+<div class="card">
+    @if (Model.Any())
+    {
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Participant</th>
+                        <th>Study</th>
+                        <th>Version</th>
+                        <th>Consent Date</th>
+                        <th>Expiration</th>
+                        <th>Signed by Guardian</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model)
+                    {
+                        var isExpiring = c.ExpirationDate.HasValue && c.ExpirationDate.Value <= DateTime.Today.AddDays(30) && c.Status == "Active";
+                        <tr>
+                            <td>
+                                <a href="@Url.Action("Details","Participants",new{id=c.ParticipantId})"
+                                   style="color:var(--primary);font-weight:600;text-decoration:none;">
+                                    @c.Participant?.FirstName @c.Participant?.LastName
+                                </a>
+                            </td>
+                            <td>
+                                <a href="@Url.Action("Details","Studies",new{id=c.StudyId})"
+                                   style="color:var(--primary);text-decoration:none;font-size:0.85rem;">
+                                    @c.Study?.StudyCode
+                                </a>
+                            </td>
+                            <td><code style="font-size:0.8rem;">v@c.Version</code></td>
+                            <td style="font-size:0.82rem;">@c.ConsentDate.ToString("MMM d, yyyy")</td>
+                            <td style="font-size:0.82rem;">
+                                @if (c.ExpirationDate.HasValue)
+                                {
+                                    <span style="@(isExpiring ? "color:var(--warning);font-weight:600;" : "")">
+                                        @c.ExpirationDate.Value.ToString("MMM d, yyyy")
+                                        @if (isExpiring) { <i class="fa-solid fa-clock" title="Expiring soon"></i> }
+                                    </span>
+                                }
+                                else { <span style="color:var(--text-muted);">—</span> }
+                            </td>
+                            <td style="text-align:center;">
+                                @if (c.SignedByGuardian)
+                                { <i class="fa-solid fa-circle-check" style="color:var(--success);"></i> }
+                                else
+                                { <i class="fa-solid fa-circle-xmark" style="color:var(--text-muted);"></i> }
+                            </td>
+                            <td>
+                                <span class="badge badge-@c.Status.ToLower()">@c.Status</span>
+                                @if (c.ReconsentRequired)
+                                { <span class="badge" style="background:rgba(245,158,11,0.15);color:#b45309;margin-left:4px;">Re-consent</span> }
+                            </td>
+                            <td>
+                                <div style="display:flex;gap:6px;">
+                                    <a href="@Url.Action("Details",new{id=c.ConsentFormId})" class="btn btn-glass btn-sm">View</a>
+                                    <a href="@Url.Action("Edit",new{id=c.ConsentFormId})" class="btn btn-outline-primary btn-sm btn-icon"><i class="fa-solid fa-pen"></i></a>
+                                    <a href="@Url.Action("Delete",new{id=c.ConsentFormId})" class="btn btn-danger btn-sm btn-icon"><i class="fa-solid fa-trash"></i></a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-file-signature"></i></div>
+            <h4>No consent forms found</h4>
+            <p>@(current == "All" ? "No consent records have been added yet." : $"No consents with status \"{current}\".")</p>
+            <a href="@Url.Action("Create")" class="btn btn-primary" style="margin-top:12px;"><i class="fa-solid fa-plus"></i> Record First Consent</a>
+        </div>
+    }
+</div>

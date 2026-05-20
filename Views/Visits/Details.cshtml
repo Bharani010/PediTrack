@@ -1,0 +1,174 @@
+@model Visit
+@{
+    ViewData["Title"] = $"Visit — {Model.VisitType}";
+    ViewData["PageTitle"] = "Visit Details";
+    var statusIcon = Model.Status switch {
+        "Completed"   => "fa-circle-check",
+        "Missed"      => "fa-circle-xmark",
+        "Cancelled"   => "fa-ban",
+        "Rescheduled" => "fa-calendar-xmark",
+        _             => "fa-clock"
+    };
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-calendar-check" style="color:var(--primary);margin-right:10px;"></i>@Model.VisitType Visit</h2>
+        <p>@Model.Participant?.FirstName @Model.Participant?.LastName · @Model.Study?.StudyCode</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+        <a href="@Url.Action("Edit",new{id=Model.VisitId})" class="btn btn-glass"><i class="fa-solid fa-pen"></i> Edit</a>
+        <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success" style="margin-bottom:16px;padding:12px 16px;border-radius:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#065f46;display:flex;gap:10px;align-items:center;">
+        <i class="fa-solid fa-circle-check"></i> @TempData["Success"]
+    </div>
+}
+
+<div class="detail-grid">
+    <div>
+        <!-- Visit Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <span class="card-header-title">
+                    <i class="fa-solid fa-@statusIcon" style="color:var(--primary);margin-right:8px;"></i>Visit Information
+                </span>
+                <span class="badge badge-@Model.Status.ToLower()">@Model.Status</span>
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Participant</label>
+                        <span>
+                            <a href="@Url.Action("Details","Participants",new{id=Model.ParticipantId})"
+                               style="color:var(--primary);font-weight:600;text-decoration:none;">
+                                @Model.Participant?.FirstName @Model.Participant?.LastName
+                            </a>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Study</label>
+                        <span>
+                            <a href="@Url.Action("Details","Studies",new{id=Model.StudyId})"
+                               style="color:var(--primary);font-weight:600;text-decoration:none;">
+                                @Model.Study?.StudyCode
+                            </a>
+                            <span style="color:var(--text-muted);font-size:0.82rem;"> — @Model.Study?.StudyName</span>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Visit Type</label>
+                        <span style="font-weight:600;">@Model.VisitType</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Visit Number</label>
+                        <span>@(Model.VisitNumber.HasValue ? $"#{Model.VisitNumber}" : "—")</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Scheduled Date</label>
+                        <span>@Model.ScheduledDate.ToString("MMMM d, yyyy h:mm tt")</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Completed Date</label>
+                        <span>
+                            @if (Model.CompletedDate.HasValue)
+                            { <span style="color:var(--success);font-weight:600;">@Model.CompletedDate.Value.ToString("MMMM d, yyyy h:mm tt")</span> }
+                            else
+                            { <span style="color:var(--text-muted);">—</span> }
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Status</label>
+                        <span><span class="badge badge-@Model.Status.ToLower()">@Model.Status</span></span>
+                    </div>
+                    <div class="info-item">
+                        <label>Location</label>
+                        <span>@(string.IsNullOrWhiteSpace(Model.Location) ? "—" : Model.Location)</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Assigned Staff</label>
+                        <span>
+                            @if (Model.AssignedStaff != null)
+                            {
+                                <a href="@Url.Action("Details","Investigators",new{id=Model.AssignedStaffId})"
+                                   style="color:var(--primary);font-weight:600;text-decoration:none;">
+                                    @Model.AssignedStaff.FullName
+                                </a>
+                            }
+                            else { <span style="color:var(--text-muted);">—</span> }
+                        </span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                    {
+                        <div class="info-item" style="grid-column:1/-1;">
+                            <label>Notes</label>
+                            <span>@Model.Notes</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Quick Actions -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-bolt" style="color:var(--primary);margin-right:8px;"></i>Quick Actions</span>
+            </div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:8px;">
+                @if (Model.Status == "Scheduled")
+                {
+                    <button class="btn btn-primary w-100" onclick="markComplete(@Model.VisitId)">
+                        <i class="fa-solid fa-circle-check"></i> Mark as Completed
+                    </button>
+                }
+                <a href="@Url.Action("Edit",new{id=Model.VisitId})" class="btn btn-glass w-100">
+                    <i class="fa-solid fa-pen"></i> Edit Visit
+                </a>
+                <a href="@Url.Action("Create",new{participantId=Model.ParticipantId})" class="btn btn-outline-primary w-100">
+                    <i class="fa-solid fa-calendar-plus"></i> Schedule Another Visit
+                </a>
+                <a href="@Url.Action("Details","Participants",new{id=Model.ParticipantId})" class="btn btn-glass w-100">
+                    <i class="fa-solid fa-child-reaching"></i> View Participant
+                </a>
+                <a href="@Url.Action("Delete",new{id=Model.VisitId})" class="btn btn-danger w-100">
+                    <i class="fa-solid fa-trash"></i> Remove Visit
+                </a>
+            </div>
+        </div>
+
+        <!-- Timestamps -->
+        <div class="card" style="margin-top:16px;">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-clock" style="color:var(--primary);margin-right:8px;"></i>Record Info</span>
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    <div class="info-item"><label>Created</label><span style="font-size:0.82rem;color:var(--text-muted);">@Model.CreatedAt.ToString("MMM d, yyyy")</span></div>
+                    <div class="info-item"><label>Updated</label><span style="font-size:0.82rem;color:var(--text-muted);">@Model.UpdatedAt.ToString("MMM d, yyyy")</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function markComplete(visitId) {
+    if (!confirm('Mark this visit as completed?')) return;
+    fetch(`/Visits/MarkComplete/${visitId}`, {
+        method: 'POST',
+        headers: { 'RequestVerificationToken': document.querySelector('[name=__RequestVerificationToken]')?.value ?? '' }
+    })
+    .then(r => r.json())
+    .then(data => { if (data.success) location.reload(); })
+    .catch(() => alert('Could not update visit status.'));
+}
+</script>
+@Html.AntiForgeryToken()
+}

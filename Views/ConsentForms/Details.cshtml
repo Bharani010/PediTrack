@@ -1,0 +1,142 @@
+@model ConsentForm
+@{
+    ViewData["Title"] = "Consent Form Details";
+    ViewData["PageTitle"] = "Consent Form";
+    var isExpiring = Model.ExpirationDate.HasValue && Model.ExpirationDate.Value <= DateTime.Today.AddDays(30) && Model.Status == "Active";
+    var isExpired  = Model.ExpirationDate.HasValue && Model.ExpirationDate.Value < DateTime.Today;
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-file-signature" style="color:var(--primary);margin-right:10px;"></i>Consent Form</h2>
+        <p>@Model.Participant?.FirstName @Model.Participant?.LastName · @Model.Study?.StudyCode</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+        <a href="@Url.Action("Edit",new{id=Model.ConsentFormId})" class="btn btn-glass"><i class="fa-solid fa-pen"></i> Edit</a>
+        <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    </div>
+</div>
+
+@if (Model.ReconsentRequired)
+{
+    <div class="warning-banner" style="margin-bottom:16px;">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <strong>Re-consent Required</strong> — This participant needs to re-sign consent before their next visit.
+    </div>
+}
+
+@if (isExpiring && !isExpired)
+{
+    <div style="margin-bottom:16px;padding:12px 16px;border-radius:8px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);color:#92400e;display:flex;gap:10px;align-items:center;">
+        <i class="fa-solid fa-clock"></i>
+        <span><strong>Expiring Soon</strong> — Consent expires on @Model.ExpirationDate!.Value.ToString("MMMM d, yyyy"). Renewal may be required.</span>
+    </div>
+}
+
+<div class="detail-grid">
+    <div>
+        <!-- Core Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-clipboard-list" style="color:var(--primary);margin-right:8px;"></i>Consent Details</span>
+                <span class="badge badge-@Model.Status.ToLower()" style="font-size:0.82rem;">@Model.Status</span>
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Participant</label>
+                        <span>
+                            <a href="@Url.Action("Details","Participants",new{id=Model.ParticipantId})"
+                               style="color:var(--primary);font-weight:600;text-decoration:none;">
+                                @Model.Participant?.FirstName @Model.Participant?.LastName
+                            </a>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Study</label>
+                        <span>
+                            <a href="@Url.Action("Details","Studies",new{id=Model.StudyId})"
+                               style="color:var(--primary);font-weight:600;text-decoration:none;">
+                                @Model.Study?.StudyCode — @Model.Study?.StudyName
+                            </a>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Form Version</label>
+                        <span><code style="font-size:0.85rem;">v@Model.Version</code></span>
+                    </div>
+                    <div class="info-item">
+                        <label>Status</label>
+                        <span><span class="badge badge-@Model.Status.ToLower()">@Model.Status</span></span>
+                    </div>
+                    <div class="info-item">
+                        <label>Consent Date</label>
+                        <span>@Model.ConsentDate.ToString("MMMM d, yyyy")</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Expiration Date</label>
+                        <span style="@(isExpired ? "color:var(--danger);font-weight:600;" : isExpiring ? "color:var(--warning);font-weight:600;" : "")">
+                            @(Model.ExpirationDate.HasValue ? Model.ExpirationDate.Value.ToString("MMMM d, yyyy") : "—")
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Signed by Guardian?</label>
+                        <span>
+                            @if (Model.SignedByGuardian)
+                            { <span style="color:var(--success);font-weight:600;"><i class="fa-solid fa-circle-check"></i> Yes</span> }
+                            else
+                            { <span style="color:var(--text-muted);"><i class="fa-solid fa-circle-xmark"></i> No</span> }
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Witness Name</label>
+                        <span>@(string.IsNullOrWhiteSpace(Model.WitnessName) ? "—" : Model.WitnessName)</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Re-consent Required?</label>
+                        <span>
+                            @if (Model.ReconsentRequired)
+                            { <span style="color:var(--warning);font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Yes</span> }
+                            else
+                            { <span style="color:var(--text-muted);">No</span> }
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Recorded On</label>
+                        <span style="color:var(--text-muted);font-size:0.85rem;">@Model.CreatedAt.ToString("MMM d, yyyy h:mm tt")</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                    {
+                        <div class="info-item" style="grid-column:1/-1;">
+                            <label>Notes</label>
+                            <span>@Model.Notes</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Quick Actions -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-title"><i class="fa-solid fa-bolt" style="color:var(--primary);margin-right:8px;"></i>Quick Actions</span>
+            </div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:8px;">
+                <a href="@Url.Action("Edit",new{id=Model.ConsentFormId})" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-pen"></i> Edit Consent
+                </a>
+                <a href="@Url.Action("Create",new{participantId=Model.ParticipantId})" class="btn btn-glass w-100">
+                    <i class="fa-solid fa-file-circle-plus"></i> New Consent (Same Participant)
+                </a>
+                <a href="@Url.Action("Details","Participants",new{id=Model.ParticipantId})" class="btn btn-outline-primary w-100">
+                    <i class="fa-solid fa-child-reaching"></i> View Participant
+                </a>
+                <a href="@Url.Action("Delete",new{id=Model.ConsentFormId})" class="btn btn-danger w-100">
+                    <i class="fa-solid fa-trash"></i> Remove Record
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,111 @@
+@model ConsentForm
+@{
+    ViewData["Title"] = "Edit Consent Form";
+    ViewData["PageTitle"] = "Edit Consent Form";
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-pen" style="color:var(--primary);margin-right:10px;"></i>Edit Consent Form</h2>
+        <p>Update consent record for @Model.Participant?.FirstName @Model.Participant?.LastName</p>
+    </div>
+    <a href="@Url.Action("Details",new{id=Model.ConsentFormId})" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back</a>
+</div>
+
+<div style="max-width:800px;">
+    <form asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+        <input asp-for="ConsentFormId" type="hidden" />
+        <input asp-for="CreatedAt" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+        <div class="card">
+            <div class="card-body">
+
+                <!-- Participant & Study -->
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fa-solid fa-link" style="margin-right:6px;"></i>Participant & Study</div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label" asp-for="ParticipantId">Participant <span class="required">*</span></label>
+                            <select asp-for="ParticipantId" asp-items="ViewBag.Participants" class="form-control">
+                                <option value="">-- Select Participant --</option>
+                            </select>
+                            <span asp-validation-for="ParticipantId" class="field-validation-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="StudyId">Study <span class="required">*</span></label>
+                            <select asp-for="StudyId" asp-items="ViewBag.Studies" class="form-control">
+                                <option value="">-- Select Study --</option>
+                            </select>
+                            <span asp-validation-for="StudyId" class="field-validation-error"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consent Details -->
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fa-solid fa-clipboard-list" style="margin-right:6px;"></i>Consent Details</div>
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label class="form-label" asp-for="ConsentDate">Consent Date <span class="required">*</span></label>
+                            <input asp-for="ConsentDate" type="date" class="form-control" />
+                            <span asp-validation-for="ConsentDate" class="field-validation-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="ExpirationDate">Expiration Date</label>
+                            <input asp-for="ExpirationDate" type="date" class="form-control" />
+                            <span asp-validation-for="ExpirationDate" class="field-validation-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="Version">Form Version <span class="required">*</span></label>
+                            <input asp-for="Version" class="form-control" />
+                            <span asp-validation-for="Version" class="field-validation-error"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="Status">Status</label>
+                            <select asp-for="Status" class="form-control">
+                                <option>Active</option>
+                                <option>Expired</option>
+                                <option>Revoked</option>
+                                <option>Superseded</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" asp-for="WitnessName">Witness Name</label>
+                            <input asp-for="WitnessName" class="form-control" />
+                            <span asp-validation-for="WitnessName" class="field-validation-error"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2" style="margin-top:10px;">
+                        <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+                            <input asp-for="SignedByGuardian" type="checkbox" style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer;" />
+                            <label asp-for="SignedByGuardian" class="form-label" style="margin:0;cursor:pointer;">Signed by Guardian / Parent</label>
+                        </div>
+                        <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+                            <input asp-for="ReconsentRequired" type="checkbox" style="width:16px;height:16px;accent-color:var(--warning);cursor:pointer;" />
+                            <label asp-for="ReconsentRequired" class="form-label" style="margin:0;cursor:pointer;">Re-consent Required</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fa-solid fa-note-sticky" style="margin-right:6px;"></i>Notes</div>
+                    <div class="form-group mb-0">
+                        <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer" style="display:flex;gap:10px;justify-content:flex-end;">
+                <a href="@Url.Action("Details",new{id=Model.ConsentFormId})" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
