@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PediTrack.Models;
 
@@ -5,13 +6,12 @@ namespace PediTrack.Data
 {
     public static class DbInitializer
     {
+        // ── Synchronous seed (non-Identity data) ─────────────────────────────
         public static void Seed(ApplicationDbContext db)
         {
             // Create SQL Server objects (view + stored procedures) first.
-            // Wrapped in try-catch so the app still starts on InMemory or limited SQL editions.
             CreateSqlObjects(db);
 
-            // All dates are relative to today so dashboard charts always show real data.
             var today = DateTime.Today;
 
             // --- Investigators ---
@@ -38,38 +38,10 @@ namespace PediTrack.Data
 
                 db.Studies.AddRange(new List<Study>
                 {
-                    new() {
-                        StudyCode = "MCH-ONC-001", StudyName = "Pediatric ALL Immunotherapy Response Study",
-                        IRBNumber = "IRB-2023-0441",
-                        Description = "Evaluating immunotherapy response markers in pediatric acute lymphoblastic leukemia patients aged 2–17.",
-                        StartDate  = today.AddMonths(-24), EndDate = today.AddMonths(12),
-                        Status = "Active", MaxParticipants = 80, Sponsor = "NIH – National Cancer Institute",
-                        Phase = "Phase II", PrincipalInvestigatorId = pi1.InvestigatorId
-                    },
-                    new() {
-                        StudyCode = "MCH-CARD-002", StudyName = "Congenital Heart Defect Longitudinal Registry",
-                        IRBNumber = "IRB-2022-0289",
-                        Description = "Long-term outcomes registry for children with surgically corrected congenital heart defects.",
-                        StartDate  = today.AddMonths(-36), EndDate = null,
-                        Status = "Recruiting", MaxParticipants = 200, Sponsor = "American Heart Association",
-                        Phase = "Observational", PrincipalInvestigatorId = pi2.InvestigatorId
-                    },
-                    new() {
-                        StudyCode = "MCH-NEURO-003", StudyName = "Early Biomarkers in Pediatric Epilepsy",
-                        IRBNumber = "IRB-2024-0112",
-                        Description = "Identifying serum biomarkers predictive of drug-resistant epilepsy onset in children under 12.",
-                        StartDate  = today.AddMonths(-15), EndDate = today.AddMonths(21),
-                        Status = "Active", MaxParticipants = 60, Sponsor = "Meridian Research Foundation",
-                        Phase = "Phase I", PrincipalInvestigatorId = pi3.InvestigatorId
-                    },
-                    new() {
-                        StudyCode = "MCH-ONC-004", StudyName = "Survivorship Nutrition Program",
-                        IRBNumber = "IRB-2021-0055",
-                        Description = "Nutritional intervention study in pediatric cancer survivors — now closed.",
-                        StartDate  = today.AddMonths(-42), EndDate = today.AddMonths(-18),
-                        Status = "Closed", MaxParticipants = 40, Sponsor = "Children's Cancer Fund",
-                        Phase = "Phase II", PrincipalInvestigatorId = pi1.InvestigatorId
-                    },
+                    new() { StudyCode = "MCH-ONC-001",  StudyName = "Pediatric ALL Immunotherapy Response Study",   IRBNumber = "IRB-2023-0441", Description = "Evaluating immunotherapy response markers in pediatric ALL patients aged 2–17.", StartDate = today.AddMonths(-24), EndDate = today.AddMonths(12),  Status = "Active",     MaxParticipants = 80,  Sponsor = "NIH – National Cancer Institute",    Phase = "Phase II",      PrincipalInvestigatorId = pi1.InvestigatorId },
+                    new() { StudyCode = "MCH-CARD-002", StudyName = "Congenital Heart Defect Longitudinal Registry", IRBNumber = "IRB-2022-0289", Description = "Long-term outcomes registry for children with surgically corrected congenital heart defects.", StartDate = today.AddMonths(-36), EndDate = null,                Status = "Recruiting", MaxParticipants = 200, Sponsor = "American Heart Association",         Phase = "Observational", PrincipalInvestigatorId = pi2.InvestigatorId },
+                    new() { StudyCode = "MCH-NEURO-003",StudyName = "Early Biomarkers in Pediatric Epilepsy",       IRBNumber = "IRB-2024-0112", Description = "Identifying serum biomarkers predictive of drug-resistant epilepsy onset in children under 12.", StartDate = today.AddMonths(-15), EndDate = today.AddMonths(21), Status = "Active",     MaxParticipants = 60,  Sponsor = "Meridian Research Foundation",       Phase = "Phase I",       PrincipalInvestigatorId = pi3.InvestigatorId },
+                    new() { StudyCode = "MCH-ONC-004",  StudyName = "Survivorship Nutrition Program",               IRBNumber = "IRB-2021-0055", Description = "Nutritional intervention study in pediatric cancer survivors — now closed.",              StartDate = today.AddMonths(-42), EndDate = today.AddMonths(-18),Status = "Closed",     MaxParticipants = 40,  Sponsor = "Children's Cancer Fund",             Phase = "Phase II",      PrincipalInvestigatorId = pi1.InvestigatorId },
                 });
                 db.SaveChanges();
             }
@@ -79,18 +51,18 @@ namespace PediTrack.Data
             {
                 db.Participants.AddRange(new List<Participant>
                 {
-                    new() { MRN = "MCH-00001", FirstName = "Ethan",    LastName = "Brooks",     DateOfBirth = today.AddYears(-11).AddMonths(-1),  Gender = "Male",   GuardianName = "Patricia Brooks",    GuardianPhone = "713-555-1001", GuardianEmail = "p.brooks@email.com",   Status = "Active",    EnrollmentDate = today.AddMonths(-23) },
-                    new() { MRN = "MCH-00002", FirstName = "Sofia",    LastName = "Martinez",   DateOfBirth = today.AddYears(-14).AddMonths(-3),  Gender = "Female", GuardianName = "Carlos Martinez",    GuardianPhone = "713-555-1002", GuardianEmail = "c.martinez@email.com", Status = "Active",    EnrollmentDate = today.AddMonths(-21) },
-                    new() { MRN = "MCH-00003", FirstName = "Liam",     LastName = "Johnson",    DateOfBirth = today.AddYears(-8).AddMonths(-5),   Gender = "Male",   GuardianName = "Diana Johnson",      GuardianPhone = "713-555-1003", GuardianEmail = null,                   Status = "Active",    EnrollmentDate = today.AddMonths(-19) },
-                    new() { MRN = "MCH-00004", FirstName = "Aaliyah",  LastName = "Washington", DateOfBirth = today.AddYears(-16).AddMonths(-7),  Gender = "Female", GuardianName = "Robert Washington",  GuardianPhone = "713-555-1004", GuardianEmail = "r.wash@email.com",     Status = "Active",    EnrollmentDate = today.AddMonths(-34) },
-                    new() { MRN = "MCH-00005", FirstName = "Noah",     LastName = "Kim",        DateOfBirth = today.AddYears(-10).AddMonths(-2),  Gender = "Male",   GuardianName = "Sun-Yi Kim",         GuardianPhone = "713-555-1005", GuardianEmail = "sunyi.kim@email.com",  Status = "Active",    EnrollmentDate = today.AddMonths(-33) },
-                    new() { MRN = "MCH-00006", FirstName = "Isabella", LastName = "Thompson",   DateOfBirth = today.AddYears(-12).AddMonths(-9),  Gender = "Female", GuardianName = "Mark Thompson",      GuardianPhone = "713-555-1006", GuardianEmail = "m.thompson@email.com", Status = "Withdrawn", EnrollmentDate = today.AddMonths(-17) },
-                    new() { MRN = "MCH-00007", FirstName = "Mason",    LastName = "Garcia",     DateOfBirth = today.AddYears(-7),                 Gender = "Male",   GuardianName = "Elena Garcia",       GuardianPhone = "713-555-1007", GuardianEmail = null,                   Status = "Active",    EnrollmentDate = today.AddMonths(-13) },
-                    new() { MRN = "MCH-00008", FirstName = "Zoe",      LastName = "Pham",       DateOfBirth = today.AddYears(-13).AddMonths(-4),  Gender = "Female", GuardianName = "Minh Pham",          GuardianPhone = "713-555-1008", GuardianEmail = "m.pham@email.com",     Status = "Active",    EnrollmentDate = today.AddMonths(-11) },
-                    new() { MRN = "MCH-00009", FirstName = "Oliver",   LastName = "Nguyen",     DateOfBirth = today.AddYears(-9).AddMonths(-10),  Gender = "Male",   GuardianName = "Lisa Nguyen",        GuardianPhone = "713-555-1009", GuardianEmail = "l.nguyen@email.com",   Status = "Completed", EnrollmentDate = today.AddMonths(-38) },
-                    new() { MRN = "MCH-00010", FirstName = "Amara",    LastName = "Osei",       DateOfBirth = today.AddYears(-15).AddMonths(-6),  Gender = "Female", GuardianName = "Kwame Osei",         GuardianPhone = "713-555-1010", GuardianEmail = "k.osei@email.com",     Status = "Active",    EnrollmentDate = today.AddMonths(-8) },
-                    new() { MRN = "MCH-00011", FirstName = "James",    LastName = "Reyes",      DateOfBirth = today.AddYears(-6).AddMonths(-3),   Gender = "Male",   GuardianName = "Carmen Reyes",       GuardianPhone = "713-555-1011", GuardianEmail = "c.reyes@email.com",    Status = "Active",    EnrollmentDate = today.AddMonths(-5) },
-                    new() { MRN = "MCH-00012", FirstName = "Priya",    LastName = "Sharma",     DateOfBirth = today.AddYears(-11).AddMonths(-8),  Gender = "Female", GuardianName = "Anita Sharma",       GuardianPhone = "713-555-1012", GuardianEmail = "a.sharma@email.com",   Status = "Active",    EnrollmentDate = today.AddMonths(-3) },
+                    new() { MRN = "MCH-00001", FirstName = "Ethan",    LastName = "Brooks",     DateOfBirth = today.AddYears(-11).AddMonths(-1),  Gender = "Male",   GuardianName = "Patricia Brooks",   GuardianPhone = "713-555-1001", GuardianEmail = "p.brooks@email.com",   Status = "Active",    EnrollmentDate = today.AddMonths(-23) },
+                    new() { MRN = "MCH-00002", FirstName = "Sofia",    LastName = "Martinez",   DateOfBirth = today.AddYears(-14).AddMonths(-3),  Gender = "Female", GuardianName = "Carlos Martinez",   GuardianPhone = "713-555-1002", GuardianEmail = "c.martinez@email.com", Status = "Active",    EnrollmentDate = today.AddMonths(-21) },
+                    new() { MRN = "MCH-00003", FirstName = "Liam",     LastName = "Johnson",    DateOfBirth = today.AddYears(-8).AddMonths(-5),   Gender = "Male",   GuardianName = "Diana Johnson",     GuardianPhone = "713-555-1003", GuardianEmail = null,                   Status = "Active",    EnrollmentDate = today.AddMonths(-19) },
+                    new() { MRN = "MCH-00004", FirstName = "Aaliyah",  LastName = "Washington", DateOfBirth = today.AddYears(-16).AddMonths(-7),  Gender = "Female", GuardianName = "Robert Washington", GuardianPhone = "713-555-1004", GuardianEmail = "r.wash@email.com",     Status = "Active",    EnrollmentDate = today.AddMonths(-34) },
+                    new() { MRN = "MCH-00005", FirstName = "Noah",     LastName = "Kim",        DateOfBirth = today.AddYears(-10).AddMonths(-2),  Gender = "Male",   GuardianName = "Sun-Yi Kim",        GuardianPhone = "713-555-1005", GuardianEmail = "sunyi.kim@email.com",  Status = "Active",    EnrollmentDate = today.AddMonths(-33) },
+                    new() { MRN = "MCH-00006", FirstName = "Isabella", LastName = "Thompson",   DateOfBirth = today.AddYears(-12).AddMonths(-9),  Gender = "Female", GuardianName = "Mark Thompson",     GuardianPhone = "713-555-1006", GuardianEmail = "m.thompson@email.com", Status = "Withdrawn", EnrollmentDate = today.AddMonths(-17) },
+                    new() { MRN = "MCH-00007", FirstName = "Mason",    LastName = "Garcia",     DateOfBirth = today.AddYears(-7),                 Gender = "Male",   GuardianName = "Elena Garcia",      GuardianPhone = "713-555-1007", GuardianEmail = null,                   Status = "Active",    EnrollmentDate = today.AddMonths(-13) },
+                    new() { MRN = "MCH-00008", FirstName = "Zoe",      LastName = "Pham",       DateOfBirth = today.AddYears(-13).AddMonths(-4),  Gender = "Female", GuardianName = "Minh Pham",         GuardianPhone = "713-555-1008", GuardianEmail = "m.pham@email.com",     Status = "Active",    EnrollmentDate = today.AddMonths(-11) },
+                    new() { MRN = "MCH-00009", FirstName = "Oliver",   LastName = "Nguyen",     DateOfBirth = today.AddYears(-9).AddMonths(-10),  Gender = "Male",   GuardianName = "Lisa Nguyen",       GuardianPhone = "713-555-1009", GuardianEmail = "l.nguyen@email.com",   Status = "Completed", EnrollmentDate = today.AddMonths(-38) },
+                    new() { MRN = "MCH-00010", FirstName = "Amara",    LastName = "Osei",       DateOfBirth = today.AddYears(-15).AddMonths(-6),  Gender = "Female", GuardianName = "Kwame Osei",        GuardianPhone = "713-555-1010", GuardianEmail = "k.osei@email.com",     Status = "Active",    EnrollmentDate = today.AddMonths(-8)  },
+                    new() { MRN = "MCH-00011", FirstName = "James",    LastName = "Reyes",      DateOfBirth = today.AddYears(-6).AddMonths(-3),   Gender = "Male",   GuardianName = "Carmen Reyes",      GuardianPhone = "713-555-1011", GuardianEmail = "c.reyes@email.com",    Status = "Active",    EnrollmentDate = today.AddMonths(-5)  },
+                    new() { MRN = "MCH-00012", FirstName = "Priya",    LastName = "Sharma",     DateOfBirth = today.AddYears(-11).AddMonths(-8),  Gender = "Female", GuardianName = "Anita Sharma",      GuardianPhone = "713-555-1012", GuardianEmail = "a.sharma@email.com",   Status = "Active",    EnrollmentDate = today.AddMonths(-3)  },
                 });
                 db.SaveChanges();
             }
@@ -98,26 +70,26 @@ namespace PediTrack.Data
             // --- Study Enrollments ---
             if (!db.StudyEnrollments.Any())
             {
-                var parts  = db.Participants.OrderBy(p => p.ParticipantId).ToList();
-                var oncS   = db.Studies.First(s => s.StudyCode == "MCH-ONC-001");
-                var cardS  = db.Studies.First(s => s.StudyCode == "MCH-CARD-002");
-                var neuroS = db.Studies.First(s => s.StudyCode == "MCH-NEURO-003");
+                var parts   = db.Participants.OrderBy(p => p.ParticipantId).ToList();
+                var oncS    = db.Studies.First(s => s.StudyCode == "MCH-ONC-001");
+                var cardS   = db.Studies.First(s => s.StudyCode == "MCH-CARD-002");
+                var neuroS  = db.Studies.First(s => s.StudyCode == "MCH-NEURO-003");
                 var closedS = db.Studies.First(s => s.StudyCode == "MCH-ONC-004");
 
                 db.StudyEnrollments.AddRange(new List<StudyEnrollment>
                 {
-                    new() { ParticipantId = parts[0].ParticipantId, StudyId = oncS.StudyId,    EnrollmentDate = today.AddMonths(-23), Status = "Active",    SubjectId = "ALL-001" },
-                    new() { ParticipantId = parts[1].ParticipantId, StudyId = oncS.StudyId,    EnrollmentDate = today.AddMonths(-21), Status = "Active",    SubjectId = "ALL-002" },
-                    new() { ParticipantId = parts[2].ParticipantId, StudyId = oncS.StudyId,    EnrollmentDate = today.AddMonths(-19), Status = "Active",    SubjectId = "ALL-003" },
-                    new() { ParticipantId = parts[3].ParticipantId, StudyId = cardS.StudyId,   EnrollmentDate = today.AddMonths(-34), Status = "Active",    SubjectId = "CHD-001" },
-                    new() { ParticipantId = parts[4].ParticipantId, StudyId = cardS.StudyId,   EnrollmentDate = today.AddMonths(-33), Status = "Active",    SubjectId = "CHD-002" },
-                    new() { ParticipantId = parts[5].ParticipantId, StudyId = oncS.StudyId,    EnrollmentDate = today.AddMonths(-17), Status = "Withdrawn", SubjectId = "ALL-004", WithdrawalDate = today.AddMonths(-10), WithdrawalReason = "Guardian request" },
-                    new() { ParticipantId = parts[6].ParticipantId, StudyId = neuroS.StudyId,  EnrollmentDate = today.AddMonths(-13), Status = "Active",    SubjectId = "EPI-001" },
-                    new() { ParticipantId = parts[7].ParticipantId, StudyId = neuroS.StudyId,  EnrollmentDate = today.AddMonths(-11), Status = "Active",    SubjectId = "EPI-002" },
-                    new() { ParticipantId = parts[8].ParticipantId, StudyId = closedS.StudyId, EnrollmentDate = today.AddMonths(-38), Status = "Completed", SubjectId = "NUT-001" },
-                    new() { ParticipantId = parts[9].ParticipantId, StudyId = cardS.StudyId,   EnrollmentDate = today.AddMonths(-8),  Status = "Active",    SubjectId = "CHD-003" },
-                    new() { ParticipantId = parts[10].ParticipantId, StudyId = neuroS.StudyId, EnrollmentDate = today.AddMonths(-5),  Status = "Active",    SubjectId = "EPI-003" },
-                    new() { ParticipantId = parts[11].ParticipantId, StudyId = cardS.StudyId,  EnrollmentDate = today.AddMonths(-3),  Status = "Active",    SubjectId = "CHD-004" },
+                    new() { ParticipantId = parts[0].ParticipantId,  StudyId = oncS.StudyId,    EnrollmentDate = today.AddMonths(-23), Status = "Active",    SubjectId = "ALL-001" },
+                    new() { ParticipantId = parts[1].ParticipantId,  StudyId = oncS.StudyId,    EnrollmentDate = today.AddMonths(-21), Status = "Active",    SubjectId = "ALL-002" },
+                    new() { ParticipantId = parts[2].ParticipantId,  StudyId = oncS.StudyId,    EnrollmentDate = today.AddMonths(-19), Status = "Active",    SubjectId = "ALL-003" },
+                    new() { ParticipantId = parts[3].ParticipantId,  StudyId = cardS.StudyId,   EnrollmentDate = today.AddMonths(-34), Status = "Active",    SubjectId = "CHD-001" },
+                    new() { ParticipantId = parts[4].ParticipantId,  StudyId = cardS.StudyId,   EnrollmentDate = today.AddMonths(-33), Status = "Active",    SubjectId = "CHD-002" },
+                    new() { ParticipantId = parts[5].ParticipantId,  StudyId = oncS.StudyId,    EnrollmentDate = today.AddMonths(-17), Status = "Withdrawn", SubjectId = "ALL-004", WithdrawalDate = today.AddMonths(-10), WithdrawalReason = "Guardian request" },
+                    new() { ParticipantId = parts[6].ParticipantId,  StudyId = neuroS.StudyId,  EnrollmentDate = today.AddMonths(-13), Status = "Active",    SubjectId = "EPI-001" },
+                    new() { ParticipantId = parts[7].ParticipantId,  StudyId = neuroS.StudyId,  EnrollmentDate = today.AddMonths(-11), Status = "Active",    SubjectId = "EPI-002" },
+                    new() { ParticipantId = parts[8].ParticipantId,  StudyId = closedS.StudyId, EnrollmentDate = today.AddMonths(-38), Status = "Completed", SubjectId = "NUT-001" },
+                    new() { ParticipantId = parts[9].ParticipantId,  StudyId = cardS.StudyId,   EnrollmentDate = today.AddMonths(-8),  Status = "Active",    SubjectId = "CHD-003" },
+                    new() { ParticipantId = parts[10].ParticipantId, StudyId = neuroS.StudyId,  EnrollmentDate = today.AddMonths(-5),  Status = "Active",    SubjectId = "EPI-003" },
+                    new() { ParticipantId = parts[11].ParticipantId, StudyId = cardS.StudyId,   EnrollmentDate = today.AddMonths(-3),  Status = "Active",    SubjectId = "CHD-004" },
                 });
                 db.SaveChanges();
             }
@@ -133,38 +105,23 @@ namespace PediTrack.Data
 
                 db.Visits.AddRange(new List<Visit>
                 {
-                    // P0 – Ethan Brooks (MCH-ONC-001) – 3 visits: 2 completed, 1 upcoming
-                    new() { ParticipantId = parts[0].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Baseline",  ScheduledDate = today.AddMonths(-23), CompletedDate = today.AddMonths(-23), Status = "Completed", Location = "Clinic A", AssignedStaffId = staff.InvestigatorId, VisitNumber = 1 },
-                    new() { ParticipantId = parts[0].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Follow-up", ScheduledDate = today.AddMonths(-17), CompletedDate = today.AddMonths(-17), Status = "Completed", Location = "Clinic A", AssignedStaffId = staff.InvestigatorId, VisitNumber = 2 },
-                    new() { ParticipantId = parts[0].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Follow-up", ScheduledDate = today.AddDays(7),     CompletedDate = null,                 Status = "Scheduled", Location = "Clinic A", AssignedStaffId = staff.InvestigatorId, VisitNumber = 3 },
-
-                    // P1 – Sofia Martinez (MCH-ONC-001) – 2 completed + 1 upcoming
-                    new() { ParticipantId = parts[1].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Baseline",  ScheduledDate = today.AddMonths(-21), CompletedDate = today.AddMonths(-21), Status = "Completed", Location = "Clinic A", AssignedStaffId = staff.InvestigatorId, VisitNumber = 1 },
-                    new() { ParticipantId = parts[1].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Follow-up", ScheduledDate = today.AddDays(14),    CompletedDate = null,                 Status = "Scheduled", Location = "Clinic A", AssignedStaffId = staff.InvestigatorId, VisitNumber = 2 },
-
-                    // P2 – Liam Johnson (MCH-ONC-001) – 1 missed baseline
-                    new() { ParticipantId = parts[2].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Baseline",  ScheduledDate = today.AddMonths(-19), CompletedDate = null,                 Status = "Missed",    Location = "Clinic A", AssignedStaffId = staff.InvestigatorId, VisitNumber = 1, Notes = "No-show. Guardian notified." },
-                    new() { ParticipantId = parts[2].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Baseline",  ScheduledDate = today.AddDays(5),     CompletedDate = null,                 Status = "Scheduled", Location = "Clinic A", AssignedStaffId = staff.InvestigatorId, VisitNumber = 1, Notes = "Rescheduled after missed baseline." },
-
-                    // P3 – Aaliyah Washington (MCH-CARD-002) – 2 completed + 1 upcoming
+                    new() { ParticipantId = parts[0].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Baseline",  ScheduledDate = today.AddMonths(-23), CompletedDate = today.AddMonths(-23), Status = "Completed", Location = "Clinic A",       AssignedStaffId = staff.InvestigatorId, VisitNumber = 1 },
+                    new() { ParticipantId = parts[0].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Follow-up", ScheduledDate = today.AddMonths(-17), CompletedDate = today.AddMonths(-17), Status = "Completed", Location = "Clinic A",       AssignedStaffId = staff.InvestigatorId, VisitNumber = 2 },
+                    new() { ParticipantId = parts[0].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Follow-up", ScheduledDate = today.AddDays(7),     CompletedDate = null,                 Status = "Scheduled", Location = "Clinic A",       AssignedStaffId = staff.InvestigatorId, VisitNumber = 3 },
+                    new() { ParticipantId = parts[1].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Baseline",  ScheduledDate = today.AddMonths(-21), CompletedDate = today.AddMonths(-21), Status = "Completed", Location = "Clinic A",       AssignedStaffId = staff.InvestigatorId, VisitNumber = 1 },
+                    new() { ParticipantId = parts[1].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Follow-up", ScheduledDate = today.AddDays(14),    CompletedDate = null,                 Status = "Scheduled", Location = "Clinic A",       AssignedStaffId = staff.InvestigatorId, VisitNumber = 2 },
+                    new() { ParticipantId = parts[2].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Baseline",  ScheduledDate = today.AddMonths(-19), CompletedDate = null,                 Status = "Missed",    Location = "Clinic A",       AssignedStaffId = staff.InvestigatorId, VisitNumber = 1, Notes = "No-show. Guardian notified." },
+                    new() { ParticipantId = parts[2].ParticipantId, StudyId = oncS.StudyId,   VisitType = "Baseline",  ScheduledDate = today.AddDays(5),     CompletedDate = null,                 Status = "Scheduled", Location = "Clinic A",       AssignedStaffId = staff.InvestigatorId, VisitNumber = 1, Notes = "Rescheduled after missed baseline." },
                     new() { ParticipantId = parts[3].ParticipantId, StudyId = cardS.StudyId,  VisitType = "Baseline",  ScheduledDate = today.AddMonths(-34), CompletedDate = today.AddMonths(-34), Status = "Completed", Location = "Cardiology Lab", AssignedStaffId = staff.InvestigatorId, VisitNumber = 1 },
                     new() { ParticipantId = parts[3].ParticipantId, StudyId = cardS.StudyId,  VisitType = "Annual",    ScheduledDate = today.AddMonths(-22), CompletedDate = today.AddMonths(-22), Status = "Completed", Location = "Cardiology Lab", AssignedStaffId = staff.InvestigatorId, VisitNumber = 2 },
                     new() { ParticipantId = parts[3].ParticipantId, StudyId = cardS.StudyId,  VisitType = "Annual",    ScheduledDate = today.AddDays(3),     CompletedDate = null,                 Status = "Scheduled", Location = "Cardiology Lab", AssignedStaffId = staff.InvestigatorId, VisitNumber = 3 },
-
-                    // P4 – Noah Kim (MCH-CARD-002) – 1 completed + 1 upcoming
                     new() { ParticipantId = parts[4].ParticipantId, StudyId = cardS.StudyId,  VisitType = "Baseline",  ScheduledDate = today.AddMonths(-33), CompletedDate = today.AddMonths(-33), Status = "Completed", Location = "Cardiology Lab", AssignedStaffId = staff.InvestigatorId, VisitNumber = 1 },
                     new() { ParticipantId = parts[4].ParticipantId, StudyId = cardS.StudyId,  VisitType = "Annual",    ScheduledDate = today.AddDays(10),    CompletedDate = null,                 Status = "Scheduled", Location = "Cardiology Lab", AssignedStaffId = staff.InvestigatorId, VisitNumber = 2 },
-
-                    // P6 – Mason Garcia (MCH-NEURO-003) – 2 completed + 1 upcoming
                     new() { ParticipantId = parts[6].ParticipantId, StudyId = neuroS.StudyId, VisitType = "Screening", ScheduledDate = today.AddMonths(-13), CompletedDate = today.AddMonths(-13), Status = "Completed", Location = "Neuro Unit",     AssignedStaffId = staff.InvestigatorId, VisitNumber = 1 },
                     new() { ParticipantId = parts[6].ParticipantId, StudyId = neuroS.StudyId, VisitType = "Baseline",  ScheduledDate = today.AddMonths(-12), CompletedDate = today.AddMonths(-12), Status = "Completed", Location = "Neuro Unit",     AssignedStaffId = staff.InvestigatorId, VisitNumber = 2 },
                     new() { ParticipantId = parts[6].ParticipantId, StudyId = neuroS.StudyId, VisitType = "Follow-up", ScheduledDate = today.AddDays(21),    CompletedDate = null,                 Status = "Scheduled", Location = "Neuro Unit",     AssignedStaffId = staff.InvestigatorId, VisitNumber = 3 },
-
-                    // P7 – Zoe Pham (MCH-NEURO-003) – 1 completed + 1 upcoming
                     new() { ParticipantId = parts[7].ParticipantId, StudyId = neuroS.StudyId, VisitType = "Screening", ScheduledDate = today.AddMonths(-11), CompletedDate = today.AddMonths(-11), Status = "Completed", Location = "Neuro Unit",     AssignedStaffId = staff.InvestigatorId, VisitNumber = 1 },
                     new() { ParticipantId = parts[7].ParticipantId, StudyId = neuroS.StudyId, VisitType = "Baseline",  ScheduledDate = today.AddDays(2),     CompletedDate = null,                 Status = "Scheduled", Location = "Neuro Unit",     AssignedStaffId = staff.InvestigatorId, VisitNumber = 2 },
-
-                    // P9 – Amara Osei (MCH-CARD-002) – upcoming only
                     new() { ParticipantId = parts[9].ParticipantId, StudyId = cardS.StudyId,  VisitType = "Baseline",  ScheduledDate = today.AddDays(4),     CompletedDate = null,                 Status = "Scheduled", Location = "Cardiology Lab", AssignedStaffId = staff.InvestigatorId, VisitNumber = 1 },
                 });
                 db.SaveChanges();
@@ -180,16 +137,16 @@ namespace PediTrack.Data
 
                 db.ConsentForms.AddRange(new List<ConsentForm>
                 {
-                    new() { ParticipantId = parts[0].ParticipantId, StudyId = oncS.StudyId,   ConsentDate = today.AddMonths(-23), ExpirationDate = today.AddMonths(1),  Version = "2.1", SignedByGuardian = true,  WitnessName = "Aisha Patel", Status = "Active",  ReconsentRequired = true,  Notes = "Expires soon — renewal required" },
-                    new() { ParticipantId = parts[1].ParticipantId, StudyId = oncS.StudyId,   ConsentDate = today.AddMonths(-21), ExpirationDate = today.AddMonths(3),  Version = "2.1", SignedByGuardian = true,  WitnessName = "Aisha Patel", Status = "Active" },
-                    new() { ParticipantId = parts[2].ParticipantId, StudyId = oncS.StudyId,   ConsentDate = today.AddMonths(-19), ExpirationDate = today.AddMonths(5),  Version = "2.1", SignedByGuardian = true,  WitnessName = "Linda Tran",  Status = "Active" },
-                    new() { ParticipantId = parts[3].ParticipantId, StudyId = cardS.StudyId,  ConsentDate = today.AddMonths(-34), ExpirationDate = today.AddMonths(-10),Version = "1.0", SignedByGuardian = true,  WitnessName = "Aisha Patel", Status = "Expired", ReconsentRequired = true },
-                    new() { ParticipantId = parts[4].ParticipantId, StudyId = cardS.StudyId,  ConsentDate = today.AddMonths(-33), ExpirationDate = today.AddMonths(-9), Version = "1.0", SignedByGuardian = true,  WitnessName = "Linda Tran",  Status = "Expired", ReconsentRequired = true },
-                    new() { ParticipantId = parts[6].ParticipantId, StudyId = neuroS.StudyId, ConsentDate = today.AddMonths(-13), ExpirationDate = today.AddMonths(11), Version = "1.2", SignedByGuardian = true,  WitnessName = "Aisha Patel", Status = "Active" },
-                    new() { ParticipantId = parts[7].ParticipantId, StudyId = neuroS.StudyId, ConsentDate = today.AddMonths(-11), ExpirationDate = today.AddMonths(13), Version = "1.2", SignedByGuardian = true,  WitnessName = "Aisha Patel", Status = "Active" },
-                    new() { ParticipantId = parts[9].ParticipantId, StudyId = cardS.StudyId,  ConsentDate = today.AddMonths(-8),  ExpirationDate = today.AddMonths(16), Version = "1.1", SignedByGuardian = false, WitnessName = null,          Status = "Active",  Notes = "Awaiting guardian signature" },
-                    new() { ParticipantId = parts[10].ParticipantId,StudyId = neuroS.StudyId, ConsentDate = today.AddMonths(-5),  ExpirationDate = today.AddMonths(19), Version = "1.2", SignedByGuardian = true,  WitnessName = "Linda Tran",  Status = "Active" },
-                    new() { ParticipantId = parts[11].ParticipantId,StudyId = cardS.StudyId,  ConsentDate = today.AddMonths(-3),  ExpirationDate = today.AddMonths(21), Version = "1.1", SignedByGuardian = true,  WitnessName = "Aisha Patel", Status = "Active" },
+                    new() { ParticipantId = parts[0].ParticipantId,  StudyId = oncS.StudyId,   ConsentDate = today.AddMonths(-23), ExpirationDate = today.AddMonths(1),   Version = "2.1", SignedByGuardian = true,  WitnessName = "Aisha Patel", Status = "Active",  ReconsentRequired = true,  Notes = "Expires soon — renewal required" },
+                    new() { ParticipantId = parts[1].ParticipantId,  StudyId = oncS.StudyId,   ConsentDate = today.AddMonths(-21), ExpirationDate = today.AddMonths(3),   Version = "2.1", SignedByGuardian = true,  WitnessName = "Aisha Patel", Status = "Active" },
+                    new() { ParticipantId = parts[2].ParticipantId,  StudyId = oncS.StudyId,   ConsentDate = today.AddMonths(-19), ExpirationDate = today.AddMonths(5),   Version = "2.1", SignedByGuardian = true,  WitnessName = "Linda Tran",  Status = "Active" },
+                    new() { ParticipantId = parts[3].ParticipantId,  StudyId = cardS.StudyId,  ConsentDate = today.AddMonths(-34), ExpirationDate = today.AddMonths(-10), Version = "1.0", SignedByGuardian = true,  WitnessName = "Aisha Patel", Status = "Expired", ReconsentRequired = true },
+                    new() { ParticipantId = parts[4].ParticipantId,  StudyId = cardS.StudyId,  ConsentDate = today.AddMonths(-33), ExpirationDate = today.AddMonths(-9),  Version = "1.0", SignedByGuardian = true,  WitnessName = "Linda Tran",  Status = "Expired", ReconsentRequired = true },
+                    new() { ParticipantId = parts[6].ParticipantId,  StudyId = neuroS.StudyId, ConsentDate = today.AddMonths(-13), ExpirationDate = today.AddMonths(11),  Version = "1.2", SignedByGuardian = true,  WitnessName = "Aisha Patel", Status = "Active" },
+                    new() { ParticipantId = parts[7].ParticipantId,  StudyId = neuroS.StudyId, ConsentDate = today.AddMonths(-11), ExpirationDate = today.AddMonths(13),  Version = "1.2", SignedByGuardian = true,  WitnessName = "Aisha Patel", Status = "Active" },
+                    new() { ParticipantId = parts[9].ParticipantId,  StudyId = cardS.StudyId,  ConsentDate = today.AddMonths(-8),  ExpirationDate = today.AddMonths(16),  Version = "1.1", SignedByGuardian = false, WitnessName = null,          Status = "Active",  Notes = "Awaiting guardian signature" },
+                    new() { ParticipantId = parts[10].ParticipantId, StudyId = neuroS.StudyId, ConsentDate = today.AddMonths(-5),  ExpirationDate = today.AddMonths(19),  Version = "1.2", SignedByGuardian = true,  WitnessName = "Linda Tran",  Status = "Active" },
+                    new() { ParticipantId = parts[11].ParticipantId, StudyId = cardS.StudyId,  ConsentDate = today.AddMonths(-3),  ExpirationDate = today.AddMonths(21),  Version = "1.1", SignedByGuardian = true,  WitnessName = "Aisha Patel", Status = "Active" },
                 });
                 db.SaveChanges();
             }
@@ -221,12 +178,77 @@ namespace PediTrack.Data
             }
         }
 
+        // ── Async seed: Identity roles + users (called from Program.cs after Seed()) ──
+        public static async Task SeedUsersAsync(
+            ApplicationDbContext db,
+            UserManager<AppUser> userManager,
+            RoleManager<IdentityRole> roleManager)
+        {
+            // Create roles
+            foreach (var role in new[] { "Admin", "Customer" })
+            {
+                if (!await roleManager.RoleExistsAsync(role))
+                    await roleManager.CreateAsync(new IdentityRole(role));
+            }
+
+            // ── Admin account ────────────────────────────────────────────────
+            const string adminEmail = "admin@peditrack.com";
+            if (await userManager.FindByEmailAsync(adminEmail) == null)
+            {
+                var admin = new AppUser
+                {
+                    UserName    = adminEmail,
+                    Email       = adminEmail,
+                    DisplayName = "System Administrator",
+                    IsActive    = true,
+                    EmailConfirmed = true
+                };
+                var result = await userManager.CreateAsync(admin, "Admin@PediTrack2024!");
+                if (result.Succeeded)
+                    await userManager.AddToRoleAsync(admin, "Admin");
+            }
+
+            // ── Customer accounts (one per participant guardian email) ────────
+            // Seed guardian accounts for participants who have guardian emails
+            var participants = db.Participants
+                .Where(p => p.GuardianEmail != null)
+                .OrderBy(p => p.ParticipantId)
+                .Take(3) // seed 3 sample guardian accounts
+                .ToList();
+
+            var samplePasswords = new Dictionary<string, string>
+            {
+                { "p.brooks@email.com",   "Guardian@PediTrack2024!" },
+                { "c.martinez@email.com", "Guardian@PediTrack2024!" },
+                { "r.wash@email.com",     "Guardian@PediTrack2024!" },
+            };
+
+            foreach (var participant in participants)
+            {
+                var email = participant.GuardianEmail!;
+                if (!samplePasswords.ContainsKey(email)) continue;
+                if (await userManager.FindByEmailAsync(email) != null) continue;
+
+                var customer = new AppUser
+                {
+                    UserName       = email,
+                    Email          = email,
+                    DisplayName    = participant.GuardianName ?? $"Guardian of {participant.FirstName}",
+                    ParticipantId  = participant.ParticipantId,
+                    IsActive       = true,
+                    EmailConfirmed = true
+                };
+                var result = await userManager.CreateAsync(customer, samplePasswords[email]);
+                if (result.Succeeded)
+                    await userManager.AddToRoleAsync(customer, "Customer");
+            }
+        }
+
         // ── Creates / replaces the DB view and stored procedures on each startup ──
         private static void CreateSqlObjects(ApplicationDbContext db)
         {
             try
             {
-                // ── View: vw_StudyEnrollmentSummary ──────────────────────────────
                 db.Database.ExecuteSqlRaw(
                     "IF OBJECT_ID('dbo.vw_StudyEnrollmentSummary','V') IS NOT NULL DROP VIEW dbo.vw_StudyEnrollmentSummary;");
 
@@ -265,7 +287,6 @@ LEFT JOIN dbo.ConsentForms     cf ON cf.StudyId = s.StudyId
 GROUP BY
     s.StudyId, s.StudyCode, s.StudyName, s.Status, s.Phase, s.MaxParticipants;");
 
-                // ── SP: usp_GetEnrollmentSummaryByStudy ──────────────────────────
                 db.Database.ExecuteSqlRaw(
                     "IF OBJECT_ID('dbo.usp_GetEnrollmentSummaryByStudy','P') IS NOT NULL DROP PROCEDURE dbo.usp_GetEnrollmentSummaryByStudy;");
 
@@ -276,75 +297,54 @@ CREATE PROCEDURE dbo.usp_GetEnrollmentSummaryByStudy
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT
-        s.StudyCode,
-        s.StudyName,
-        s.Status,
-        s.Phase,
-        ISNULL(s.MaxParticipants, 0)                                    AS MaxParticipants,
-        COUNT(DISTINCT se.StudyEnrollmentId)                            AS TotalEnrolled,
-        COUNT(DISTINCT CASE WHEN se.Status = 'Active'    THEN se.StudyEnrollmentId END) AS ActiveParticipants,
-        COUNT(DISTINCT CASE WHEN se.Status = 'Completed' THEN se.StudyEnrollmentId END) AS CompletedParticipants,
-        COUNT(DISTINCT CASE WHEN se.Status = 'Withdrawn' THEN se.StudyEnrollmentId END) AS WithdrawnParticipants,
-        SUM(CASE WHEN v.Status = 'Completed' THEN 1 ELSE 0 END)        AS CompletedVisits,
-        SUM(CASE WHEN v.Status = 'Missed'    THEN 1 ELSE 0 END)        AS MissedVisits,
-        CAST(
-            CASE
-                WHEN ISNULL(s.MaxParticipants, 0) = 0 THEN 0.00
-                ELSE CAST(COUNT(DISTINCT se.StudyEnrollmentId) AS DECIMAL(10,2))
-                     / CAST(s.MaxParticipants AS DECIMAL(10,2)) * 100.0
-            END
-        AS DECIMAL(5,2))                                                AS EnrollmentPct
+    SELECT s.StudyCode, s.StudyName, s.Status, s.Phase,
+        ISNULL(s.MaxParticipants,0) AS MaxParticipants,
+        COUNT(DISTINCT se.StudyEnrollmentId) AS TotalEnrolled,
+        COUNT(DISTINCT CASE WHEN se.Status='Active'    THEN se.StudyEnrollmentId END) AS ActiveParticipants,
+        COUNT(DISTINCT CASE WHEN se.Status='Completed' THEN se.StudyEnrollmentId END) AS CompletedParticipants,
+        COUNT(DISTINCT CASE WHEN se.Status='Withdrawn' THEN se.StudyEnrollmentId END) AS WithdrawnParticipants,
+        SUM(CASE WHEN v.Status='Completed' THEN 1 ELSE 0 END) AS CompletedVisits,
+        SUM(CASE WHEN v.Status='Missed'    THEN 1 ELSE 0 END) AS MissedVisits,
+        CAST(CASE WHEN ISNULL(s.MaxParticipants,0)=0 THEN 0.00
+            ELSE CAST(COUNT(DISTINCT se.StudyEnrollmentId) AS DECIMAL(10,2))/CAST(s.MaxParticipants AS DECIMAL(10,2))*100.0
+        END AS DECIMAL(5,2)) AS EnrollmentPct
     FROM dbo.Studies s
-    LEFT JOIN dbo.StudyEnrollments se ON se.StudyId = s.StudyId
-    LEFT JOIN dbo.Visits           v  ON v.StudyId  = s.StudyId
-    WHERE (@StudyId IS NULL OR s.StudyId = @StudyId)
-      AND (@Status  IS NULL OR s.Status  = @Status)
-    GROUP BY s.StudyId, s.StudyCode, s.StudyName, s.Status, s.Phase, s.MaxParticipants
+    LEFT JOIN dbo.StudyEnrollments se ON se.StudyId=s.StudyId
+    LEFT JOIN dbo.Visits v ON v.StudyId=s.StudyId
+    WHERE (@StudyId IS NULL OR s.StudyId=@StudyId)
+      AND (@Status  IS NULL OR s.Status =@Status)
+    GROUP BY s.StudyId,s.StudyCode,s.StudyName,s.Status,s.Phase,s.MaxParticipants
     ORDER BY TotalEnrolled DESC, s.StudyCode;
 END;");
 
-                // ── SP: usp_GetParticipantVisitHistory ───────────────────────────
                 db.Database.ExecuteSqlRaw(
                     "IF OBJECT_ID('dbo.usp_GetParticipantVisitHistory','P') IS NOT NULL DROP PROCEDURE dbo.usp_GetParticipantVisitHistory;");
 
                 db.Database.ExecuteSqlRaw(@"
 CREATE PROCEDURE dbo.usp_GetParticipantVisitHistory
-    @ParticipantId  INT,
-    @StudyId        INT = NULL
+    @ParticipantId INT,
+    @StudyId       INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT
-        p.MRN,
-        p.FirstName + ' ' + p.LastName                                     AS ParticipantName,
-        s.StudyCode,
-        s.StudyName,
-        v.VisitType,
-        v.VisitNumber,
-        v.ScheduledDate,
-        v.CompletedDate,
-        v.Status                                                            AS VisitStatus,
-        v.Location,
-        ISNULL(i.FirstName + ' ' + i.LastName, 'Unassigned')               AS AssignedStaff,
-        v.Notes,
-        se.Status                                                           AS EnrollmentStatus,
-        se.SubjectId
+    SELECT p.MRN, p.FirstName+' '+p.LastName AS ParticipantName,
+        s.StudyCode, s.StudyName, v.VisitType, v.VisitNumber,
+        v.ScheduledDate, v.CompletedDate, v.Status AS VisitStatus,
+        v.Location, ISNULL(i.FirstName+' '+i.LastName,'Unassigned') AS AssignedStaff,
+        v.Notes, se.Status AS EnrollmentStatus, se.SubjectId
     FROM dbo.Visits v
-    INNER JOIN dbo.Participants     p  ON p.ParticipantId  = v.ParticipantId
-    INNER JOIN dbo.Studies          s  ON s.StudyId        = v.StudyId
-    LEFT  JOIN dbo.Investigators    i  ON i.InvestigatorId = v.AssignedStaffId
-    LEFT  JOIN dbo.StudyEnrollments se ON se.ParticipantId = v.ParticipantId
-                                      AND se.StudyId       = v.StudyId
-    WHERE v.ParticipantId = @ParticipantId
-      AND (@StudyId IS NULL OR v.StudyId = @StudyId)
+    INNER JOIN dbo.Participants     p  ON p.ParticipantId=v.ParticipantId
+    INNER JOIN dbo.Studies          s  ON s.StudyId=v.StudyId
+    LEFT  JOIN dbo.Investigators    i  ON i.InvestigatorId=v.AssignedStaffId
+    LEFT  JOIN dbo.StudyEnrollments se ON se.ParticipantId=v.ParticipantId AND se.StudyId=v.StudyId
+    WHERE v.ParticipantId=@ParticipantId
+      AND (@StudyId IS NULL OR v.StudyId=@StudyId)
     ORDER BY s.StudyCode, v.ScheduledDate;
 END;");
             }
             catch
             {
-                // SQL Server Express may not support all DDL, or DB may not exist yet.
-                // The app continues without the view/SPs — raw SQL pages will show an error.
+                // SQL Server Express may not support all DDL — app continues without SP/view pages.
             }
         }
     }

@@ -1,0 +1,79 @@
+@model List<PediTrack.Models.Visit>
+@{
+    Layout = "_CustomerLayout";
+    ViewData["Title"]     = "My Visits";
+    ViewData["PageTitle"] = "My Visits";
+}
+
+@{
+    var upcoming  = Model.Where(v => v.Status == "Scheduled").OrderBy(v => v.ScheduledDate).ToList();
+    var past      = Model.Where(v => v.Status != "Scheduled").OrderByDescending(v => v.ScheduledDate).ToList();
+}
+
+@if (!Model.Any())
+{
+    <div style="text-align:center;padding:60px 20px;color:var(--text-m);">
+        <i class="fa-solid fa-calendar-xmark" style="font-size:3rem;margin-bottom:16px;display:block;opacity:0.3;"></i>
+        <p>No visits found.</p>
+    </div>
+}
+else
+{
+    @if (upcoming.Any())
+    {
+        <div class="c-card" style="margin-bottom:20px;">
+            <div class="c-card-header" style="color:#6366f1;"><i class="fa-solid fa-calendar-day"></i> Upcoming Visits (@upcoming.Count)</div>
+            <div class="c-card-body" style="padding:0;">
+                <table class="c-table">
+                    <thead><tr><th>Type</th><th>Study</th><th>Date</th><th>Location</th><th>Staff</th><th>Status</th></tr></thead>
+                    <tbody>
+                        @foreach (var v in upcoming)
+                        {
+                            var days = (v.ScheduledDate.Date - DateTime.Today).Days;
+                            <tr>
+                                <td><span style="font-weight:600;">@v.VisitType</span><br/><span style="font-size:0.77rem;color:var(--text-m);">Visit #@(v.VisitNumber?.ToString() ?? "—")</span></td>
+                                <td style="font-size:0.84rem;">@v.Study?.StudyCode</td>
+                                <td>
+                                    <div style="font-weight:600;">@v.ScheduledDate.ToString("MMM d, yyyy")</div>
+                                    <div style="font-size:0.77rem;color:@(days <= 3 ? "#ef4444" : "var(--text-m)");">
+                                        @(days == 0 ? "Today" : days == 1 ? "Tomorrow" : $"In {days} days")
+                                    </div>
+                                </td>
+                                <td style="font-size:0.84rem;color:var(--text-s);">@(v.Location ?? "—")</td>
+                                <td style="font-size:0.84rem;">@(v.AssignedStaff?.FullName ?? "—")</td>
+                                <td><span class="cb cb-scheduled">Scheduled</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    @if (past.Any())
+    {
+        <div class="c-card">
+            <div class="c-card-header" style="color:#0891b2;"><i class="fa-solid fa-clock-rotate-left"></i> Past Visits (@past.Count)</div>
+            <div class="c-card-body" style="padding:0;">
+                <table class="c-table">
+                    <thead><tr><th>Type</th><th>Study</th><th>Date</th><th>Completed</th><th>Location</th><th>Status</th></tr></thead>
+                    <tbody>
+                        @foreach (var v in past)
+                        {
+                            <tr>
+                                <td><span style="font-weight:600;">@v.VisitType</span><br/><span style="font-size:0.77rem;color:var(--text-m);">Visit #@(v.VisitNumber?.ToString() ?? "—")</span></td>
+                                <td style="font-size:0.84rem;">@v.Study?.StudyCode</td>
+                                <td style="font-size:0.84rem;">@v.ScheduledDate.ToString("MMM d, yyyy")</td>
+                                <td style="font-size:0.84rem;">@(v.CompletedDate.HasValue ? v.CompletedDate.Value.ToString("MMM d, yyyy") : "—")</td>
+                                <td style="font-size:0.84rem;color:var(--text-s);">@(v.Location ?? "—")</td>
+                                <td>
+                                    <span class="cb @(v.Status=="Completed" ? "cb-completed" : v.Status=="Missed" ? "cb-missed" : "cb-withdrawn")">@v.Status</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

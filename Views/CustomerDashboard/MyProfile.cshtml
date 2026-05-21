@@ -1,0 +1,68 @@
+@model PediTrack.Models.Participant
+@{
+    Layout = "_CustomerLayout";
+    ViewData["Title"]     = "My Profile";
+    ViewData["PageTitle"] = "My Child's Profile";
+}
+
+<div class="c-card">
+    <div class="c-card-header" style="color:#0891b2;">
+        <i class="fa-solid fa-child-reaching"></i> Participant Information
+        <span class="cb @(Model.Status == "Active" ? "cb-active" : "cb-withdrawn")" style="margin-left:10px;">@Model.Status</span>
+    </div>
+    <div class="c-card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+            <div>
+                <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Full Name</div>
+                <div style="font-size:1.05rem;font-weight:700;">@Model.FirstName @Model.LastName</div>
+            </div>
+            <div>
+                <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Medical Record #</div>
+                <div style="font-size:1.05rem;font-weight:700;color:#0891b2;">@Model.MRN</div>
+            </div>
+            <div>
+                <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Date of Birth</div>
+                <div>@Model.DateOfBirth.ToString("MMMM d, yyyy") <span style="color:var(--text-m);font-size:0.84rem;">(Age @Model.Age)</span></div>
+            </div>
+            <div>
+                <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Gender</div>
+                <div>@Model.Gender</div>
+            </div>
+            <div>
+                <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Enrollment Date</div>
+                <div>@Model.EnrollmentDate.ToString("MMMM d, yyyy")</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.GuardianName))
+{
+    <div class="c-card">
+        <div class="c-card-header" style="color:#0891b2;">
+            <i class="fa-solid fa-user-shield"></i> Guardian Information
+        </div>
+        <div class="c-card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <div>
+                    <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Guardian Name</div>
+                    <div style="font-weight:600;">@Model.GuardianName</div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.GuardianPhone))
+                {
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Phone</div>
+                        <div>@Model.GuardianPhone</div>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.GuardianEmail))
+                {
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Email</div>
+                        <div><a href="mailto:@Model.GuardianEmail" style="color:#0891b2;">@Model.GuardianEmail</a></div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}

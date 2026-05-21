@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PediTrack.Models;
 using PediTrack.Services;
 
 namespace PediTrack.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class ParticipantsController : Controller
     {
         private readonly IParticipantService _service;

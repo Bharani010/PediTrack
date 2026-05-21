@@ -73,6 +73,13 @@
          href="@Url.Action("Index","DataDictionary")">
         <i class="fa-solid fa-book-open"></i> Data Dictionary
       </a>
+
+      <span class="sidebar-section-label">Admin</span>
+
+      <a class="nav-item-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminDashboard" ? "active" : "")"
+         href="@Url.Action("Users","AdminDashboard")">
+        <i class="fa-solid fa-users-gear"></i> User Management
+      </a>
     </div>
 
     <div class="sidebar-footer">
@@ -92,9 +99,27 @@
         <i class="fa-solid fa-bars"></i>
       </button>
       <span class="topbar-title">@(ViewData["PageTitle"] ?? ViewData["Title"] ?? "PediTrack")</span>
-      <span class="topbar-meta">
-        <i class="fa-regular fa-calendar" style="margin-right:5px;"></i>@DateTime.Now.ToString("MMMM d, yyyy")
-      </span>
+      <div style="display:flex;align-items:center;gap:14px;margin-left:auto;">
+        <span class="topbar-meta">
+          <i class="fa-regular fa-calendar" style="margin-right:5px;"></i>@DateTime.Now.ToString("MMMM d, yyyy")
+        </span>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+          <div style="display:flex;align-items:center;gap:10px;border-left:1px solid var(--border);padding-left:14px;">
+            <span style="font-size:0.82rem;color:var(--text-secondary);white-space:nowrap;">
+              <i class="fa-solid fa-circle-user" style="color:var(--primary);margin-right:5px;"></i>
+              @(User.FindFirst("displayName")?.Value ?? User.Identity.Name)
+            </span>
+            <form asp-controller="Auth" asp-action="Logout" method="post" style="margin:0;">
+              @Html.AntiForgeryToken()
+              <button type="submit" class="btn btn-secondary"
+                      style="padding:4px 12px;font-size:0.78rem;white-space:nowrap;">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+              </button>
+            </form>
+          </div>
+        }
+      </div>
     </header>
 
     <!-- Flash Messages -->

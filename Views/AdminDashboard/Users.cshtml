@@ -1,0 +1,106 @@
+@model List<PediTrack.Models.ViewModels.UserListViewModel>
+@{
+    ViewData["Title"]     = "All Users";
+    ViewData["PageTitle"] = "User Management";
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-users" style="color:var(--primary);margin-right:10px;"></i>All Users</h2>
+        <p>@Model.Count user account(s) in the system</p>
+    </div>
+    <a href="@Url.Action("CreateUser")" class="btn btn-primary">
+        <i class="fa-solid fa-user-plus"></i> New User
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body" style="padding:0;">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Name / Email</th>
+                    <th>Role</th>
+                    <th>Linked Participant</th>
+                    <th>Status</th>
+                    <th>Last Login</th>
+                    <th>Created</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model)
+                {
+                    <tr style="@(u.IsActive ? "" : "opacity:0.6;")">
+                        <td>
+                            <div style="font-weight:600;color:var(--text-primary);">@u.DisplayName</div>
+                            <div style="font-size:0.82rem;color:var(--text-muted);">@u.Email</div>
+                        </td>
+                        <td>
+                            @if (u.Role == "Admin")
+                            {
+                                <span class="badge" style="background:#fef3c7;color:#92400e;font-size:0.75rem;"><i class="fa-solid fa-shield-halved" style="margin-right:4px;"></i>Admin</span>
+                            }
+                            else
+                            {
+                                <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:0.75rem;"><i class="fa-solid fa-user" style="margin-right:4px;"></i>Customer</span>
+                            }
+                        </td>
+                        <td style="font-size:0.84rem;color:var(--text-secondary);">
+                            @if (u.LinkedParticipant != null)
+                            {
+                                <a href="@Url.Action("Details","Participants",new{id=u.ParticipantId})" style="color:var(--primary);text-decoration:none;">
+                                    <i class="fa-solid fa-child-reaching" style="margin-right:5px;"></i>@u.LinkedParticipant
+                                </a>
+                            }
+                            else
+                            {
+                                <span style="color:var(--text-muted);">—</span>
+                            }
+                        </td>
+                        <td>
+                            @if (u.IsActive)
+                            {
+                                <span class="badge badge-active">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-withdrawn">Inactive</span>
+                            }
+                        </td>
+                        <td style="font-size:0.82rem;color:var(--text-muted);">
+                            @(u.LastLoginAt.HasValue ? u.LastLoginAt.Value.ToString("MMM d, yyyy HH:mm") : "Never")
+                        </td>
+                        <td style="font-size:0.82rem;color:var(--text-muted);">@u.CreatedAt.ToString("MMM d, yyyy")</td>
+                        <td style="text-align:right;">
+                            <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">
+                                <a href="@Url.Action("EditUser",new{id=u.Id})" class="btn btn-secondary" style="padding:4px 12px;font-size:0.78rem;">
+                                    <i class="fa-solid fa-pen"></i> Edit
+                                </a>
+
+                                <form asp-action="ToggleUserStatus" method="post" style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@u.Id" />
+                                    <button type="submit" class="btn @(u.IsActive ? "btn-warning" : "btn-success")" style="padding:4px 12px;font-size:0.78rem;"
+                                            onclick="return confirm('@(u.IsActive ? "Deactivate" : "Activate") this account?')">
+                                        <i class="fa-solid @(u.IsActive ? "fa-ban" : "fa-check")"></i>
+                                        @(u.IsActive ? "Deactivate" : "Activate")
+                                    </button>
+                                </form>
+
+                                <form asp-action="DeleteUser" method="post" style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@u.Id" />
+                                    <button type="submit" class="btn btn-danger" style="padding:4px 12px;font-size:0.78rem;"
+                                            onclick="return confirm('Permanently delete @u.Email? This cannot be undone.')">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

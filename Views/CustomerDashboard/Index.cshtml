@@ -1,0 +1,187 @@
+@model PediTrack.Models.ViewModels.CustomerDashboardViewModel
+@{
+    Layout = "_CustomerLayout";
+    ViewData["Title"]     = "My Dashboard";
+    ViewData["PageTitle"] = "My Dashboard";
+}
+
+<!-- Welcome banner -->
+<div style="background:linear-gradient(135deg,#0891b2,#0e7490);border-radius:16px;padding:24px 28px;margin-bottom:24px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+    <div>
+        <div style="font-size:0.78rem;font-weight:600;opacity:0.7;margin-bottom:4px;letter-spacing:0.04em;">WELCOME BACK</div>
+        <h2 style="font-size:1.35rem;font-weight:800;margin:0 0 4px;">@(User.FindFirst("displayName")?.Value ?? "Guardian")</h2>
+        <p style="margin:0;opacity:0.8;font-size:0.88rem;">
+            <i class="fa-solid fa-child-reaching" style="margin-right:6px;"></i>
+            Participant: <strong>@Model.Participant.FirstName @Model.Participant.LastName</strong>
+            &nbsp;·&nbsp; MRN: <strong>@Model.Participant.MRN</strong>
+        </p>
+    </div>
+    <div style="font-size:0.82rem;opacity:0.7;">
+        <i class="fa-regular fa-calendar" style="margin-right:5px;"></i>@DateTime.Now.ToString("MMMM d, yyyy")
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="stat-grid">
+    <div class="stat-card" style="border-top:3px solid #0891b2;">
+        <div class="stat-label">Studies Enrolled</div>
+        <div class="stat-val" style="color:#0891b2;">@Model.Enrollments.Count</div>
+    </div>
+    <div class="stat-card" style="border-top:3px solid #10b981;">
+        <div class="stat-label">Visits Completed</div>
+        <div class="stat-val" style="color:#10b981;">@Model.CompletedVisits</div>
+    </div>
+    <div class="stat-card" style="border-top:3px solid #6366f1;">
+        <div class="stat-label">Upcoming Visits</div>
+        <div class="stat-val" style="color:#6366f1;">@Model.ScheduledVisits</div>
+    </div>
+    <div class="stat-card" style="border-top:3px solid #f59e0b;">
+        <div class="stat-label">Consent Forms</div>
+        <div class="stat-val" style="color:#f59e0b;">@Model.ConsentForms.Count</div>
+    </div>
+</div>
+
+@{
+    var expiringConsent = Model.ConsentForms.Any(c => c.Status == "Active" && c.ExpirationDate.HasValue && c.ExpirationDate.Value <= DateTime.Today.AddMonths(2));
+    var expiredConsent  = Model.ConsentForms.Any(c => c.Status == "Expired");
+}
+@if (expiredConsent)
+{
+    <div class="c-alert c-alert-warning">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>One or more of your consent forms have <strong>expired</strong>. Please contact the study coordinator to re-consent.</span>
+    </div>
+}
+@if (expiringConsent)
+{
+    <div class="c-alert c-alert-info">
+        <i class="fa-solid fa-clock"></i>
+        <span>A consent form is expiring within the next 60 days. The study team will contact you soon.</span>
+    </div>
+}
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+    <!-- Upcoming Visits -->
+    <div class="c-card">
+        <div class="c-card-header" style="color:#0891b2;">
+            <i class="fa-solid fa-calendar-check"></i> Upcoming Visits
+            <a href="@Url.Action("MyVisits")" style="margin-left:auto;font-size:0.78rem;color:#0891b2;text-decoration:none;font-weight:500;">View all</a>
+        </div>
+        <div class="c-card-body" style="padding:0;">
+            @if (!Model.UpcomingVisits.Any())
+            {
+                <div style="padding:24px;text-align:center;color:var(--text-m);font-size:0.86rem;">
+                    <i class="fa-regular fa-calendar-xmark" style="font-size:1.8rem;display:block;margin-bottom:10px;"></i>No upcoming visits scheduled
+                </div>
+            }
+            else
+            {
+                <table class="c-table">
+                    <tbody>
+                        @foreach (var v in Model.UpcomingVisits)
+                        {
+                            var daysUntil = (v.ScheduledDate.Date - DateTime.Today).Days;
+                            <tr>
+                                <td>
+                                    <div style="font-weight:600;color:var(--text-p);">@v.VisitType</div>
+                                    <div style="font-size:0.78rem;color:var(--text-m);">@v.Study?.StudyCode</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight:600;">@v.ScheduledDate.ToString("MMM d, yyyy")</div>
+                                    <div style="font-size:0.78rem;color:@(daysUntil <= 3 ? "#ef4444" : "var(--text-m)");">
+                                        @(daysUntil == 0 ? "Today" : daysUntil == 1 ? "Tomorrow" : $"In {daysUntil} days")
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(v.Location))
+                                    {
+                                        <span style="font-size:0.78rem;color:var(--text-m);"><i class="fa-solid fa-location-dot" style="margin-right:4px;"></i>@v.Location</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <!-- Active Enrollments -->
+    <div class="c-card">
+        <div class="c-card-header" style="color:#0891b2;">
+            <i class="fa-solid fa-flask"></i> My Studies
+            <a href="@Url.Action("MyStudies")" style="margin-left:auto;font-size:0.78rem;color:#0891b2;text-decoration:none;font-weight:500;">View all</a>
+        </div>
+        <div class="c-card-body" style="padding:0;">
+            @if (!Model.Enrollments.Any())
+            {
+                <div style="padding:24px;text-align:center;color:var(--text-m);font-size:0.86rem;">
+                    <i class="fa-solid fa-flask" style="font-size:1.8rem;display:block;margin-bottom:10px;opacity:0.3;"></i>No study enrollments
+                </div>
+            }
+            else
+            {
+                <table class="c-table">
+                    <tbody>
+                        @foreach (var e in Model.Enrollments)
+                        {
+                            <tr>
+                                <td>
+                                    <div style="font-weight:600;color:var(--text-p);">@e.Study?.StudyName</div>
+                                    <div style="font-size:0.78rem;color:var(--text-m);">@e.Study?.StudyCode &nbsp;·&nbsp; Subject: @(e.SubjectId ?? "—")</div>
+                                </td>
+                                <td>
+                                    <span class="cb @(e.Status == "Active" ? "cb-active" : e.Status == "Completed" ? "cb-completed" : "cb-withdrawn")">@e.Status</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+</div>
+
+<!-- Consent Forms -->
+<div class="c-card">
+    <div class="c-card-header" style="color:#0891b2;">
+        <i class="fa-solid fa-file-signature"></i> Consent Forms
+        <a href="@Url.Action("MyConsents")" style="margin-left:auto;font-size:0.78rem;color:#0891b2;text-decoration:none;font-weight:500;">View all</a>
+    </div>
+    <div class="c-card-body" style="padding:0;">
+        @if (!Model.ConsentForms.Any())
+        {
+            <div style="padding:24px;text-align:center;color:var(--text-m);font-size:0.86rem;">No consent forms on record</div>
+        }
+        else
+        {
+            <table class="c-table">
+                <thead>
+                    <tr><th>Study</th><th>Consent Date</th><th>Expiry</th><th>Version</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.ConsentForms)
+                    {
+                        <tr>
+                            <td style="font-weight:600;">@c.Study?.StudyCode</td>
+                            <td>@c.ConsentDate.ToString("MMM d, yyyy")</td>
+                            <td style="@(c.ExpirationDate.HasValue && c.ExpirationDate.Value <= DateTime.Today ? "color:#ef4444;font-weight:600;" : "")">
+                                @(c.ExpirationDate.HasValue ? c.ExpirationDate.Value.ToString("MMM d, yyyy") : "—")
+                            </td>
+                            <td>v@c.Version</td>
+                            <td>
+                                <span class="cb @(c.Status=="Active" ? "cb-active" : c.Status=="Expired" ? "cb-expired" : "cb-withdrawn")">@c.Status</span>
+                                @if (c.ReconsentRequired)
+                                {
+                                    <span class="cb" style="background:#fef3c7;color:#92400e;margin-left:4px;font-size:0.68rem;">Re-consent needed</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

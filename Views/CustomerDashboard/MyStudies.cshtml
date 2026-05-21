@@ -1,0 +1,63 @@
+@model List<PediTrack.Models.StudyEnrollment>
+@{
+    Layout = "_CustomerLayout";
+    ViewData["Title"]     = "My Studies";
+    ViewData["PageTitle"] = "My Studies";
+}
+
+@if (!Model.Any())
+{
+    <div style="text-align:center;padding:60px 20px;color:var(--text-m);">
+        <i class="fa-solid fa-flask" style="font-size:3rem;margin-bottom:16px;display:block;opacity:0.3;"></i>
+        <p>No study enrollments found.</p>
+    </div>
+}
+else
+{
+    @foreach (var e in Model)
+    {
+        <div class="c-card">
+            <div class="c-card-header" style="justify-content:space-between;">
+                <div>
+                    <i class="fa-solid fa-flask" style="color:#0891b2;margin-right:8px;"></i>
+                    @e.Study?.StudyName
+                </div>
+                <span class="cb @(e.Status == "Active" ? "cb-active" : e.Status == "Completed" ? "cb-completed" : "cb-withdrawn")">@e.Status</span>
+            </div>
+            <div class="c-card-body">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;">
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Study Code</div>
+                        <div style="font-weight:600;color:#0891b2;">@e.Study?.StudyCode</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Phase</div>
+                        <div>@(e.Study?.Phase ?? "—")</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Subject ID</div>
+                        <div style="font-weight:600;">@(e.SubjectId ?? "—")</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Enrolled</div>
+                        <div>@e.EnrollmentDate.ToString("MMM d, yyyy")</div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(e.Study?.Sponsor))
+                    {
+                        <div>
+                            <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Sponsor</div>
+                            <div style="font-size:0.85rem;">@e.Study.Sponsor</div>
+                        </div>
+                    }
+                    @if (e.Study?.PrincipalInvestigator != null)
+                    {
+                        <div>
+                            <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Principal Investigator</div>
+                            <div style="font-size:0.85rem;">@e.Study.PrincipalInvestigator.FullName</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+}

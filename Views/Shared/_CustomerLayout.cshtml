@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@ViewData["Title"] — PediTrack Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    :root {
+      --cp:         #0891b2;  /* customer primary — cyan */
+      --cp-dark:    #0e7490;
+      --cp-light:   #ecfeff;
+      --sidebar-w:  240px;
+      --text-p:     #0f172a;
+      --text-s:     #475569;
+      --text-m:     #94a3b8;
+      --border:     #e2e8f0;
+      --bg:         #f8fafc;
+      --success:    #10b981;
+      --warning:    #f59e0b;
+      --danger:     #ef4444;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { font-size: 15px; }
+    body { font-family:'Inter','Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text-p); margin:0; min-height:100vh; display:flex; }
+
+    /* Sidebar */
+    #cust-sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: linear-gradient(160deg, #0c4a6e 0%, #0e7490 100%);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top:0; left:0;
+      z-index: 1000;
+    }
+    .cs-brand { padding: 26px 20px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .cs-brand .brand-icon {
+      width:46px; height:46px;
+      background: rgba(255,255,255,0.15);
+      border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.3rem; color:#fff; margin-bottom:10px;
+    }
+    .cs-brand h1  { font-size:1.15rem; font-weight:800; color:#fff; margin:0 0 2px; }
+    .cs-brand p   { font-size:0.73rem; color:rgba(255,255,255,0.6); margin:0; }
+    .cs-nav       { flex:1; padding:14px 12px; overflow-y:auto; }
+    .cs-section   { font-size:0.68rem; font-weight:700; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.08em; padding:10px 8px 4px; }
+    .cs-link {
+      display:flex; align-items:center; gap:10px;
+      padding:9px 12px; border-radius:8px;
+      color:rgba(255,255,255,0.8); text-decoration:none;
+      font-size:0.87rem; font-weight:500;
+      transition:background 0.15s, color 0.15s;
+      margin-bottom:2px;
+    }
+    .cs-link:hover  { background:rgba(255,255,255,0.1); color:#fff; }
+    .cs-link.active { background:rgba(255,255,255,0.18); color:#fff; font-weight:600; }
+    .cs-link i      { width:16px; text-align:center; font-size:0.85rem; }
+    .cs-footer      { padding:16px 20px; border-top:1px solid rgba(255,255,255,0.1); }
+    .cs-footer-text { font-size:0.72rem; color:rgba(255,255,255,0.4); }
+
+    /* Main content */
+    #cust-main    { margin-left:var(--sidebar-w); flex:1; display:flex; flex-direction:column; min-height:100vh; }
+
+    /* Topbar */
+    .cust-topbar  {
+      background:#fff;
+      border-bottom:1px solid var(--border);
+      padding:0 28px;
+      height:60px;
+      display:flex;
+      align-items:center;
+      gap:14px;
+      position:sticky; top:0; z-index:100;
+      box-shadow:0 1px 4px rgba(0,0,0,0.06);
+    }
+    .cust-topbar-title { font-weight:700; font-size:1rem; color:var(--text-p); }
+    .cust-topbar-user  { margin-left:auto; display:flex; align-items:center; gap:10px; font-size:0.83rem; }
+    .cust-avatar {
+      width:34px; height:34px;
+      background:linear-gradient(135deg, var(--cp), #67e8f9);
+      border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:700; font-size:0.85rem;
+    }
+    .btn-logout {
+      padding:5px 14px;
+      background:#f1f5f9; border:1px solid var(--border);
+      border-radius:8px; color:var(--text-s);
+      font-size:0.78rem; font-weight:500;
+      cursor:pointer; text-decoration:none;
+      transition:background 0.15s;
+    }
+    .btn-logout:hover { background:#e2e8f0; color:var(--text-p); }
+
+    /* Page body */
+    .cust-body    { padding:28px; flex:1; }
+
+    /* Cards */
+    .c-card { background:#fff; border-radius:14px; border:1px solid var(--border); box-shadow:0 1px 4px rgba(0,0,0,0.05); margin-bottom:20px; }
+    .c-card-header { padding:16px 20px; border-bottom:1px solid var(--border); font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:8px; }
+    .c-card-body   { padding:20px; }
+
+    /* Stat cards */
+    .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:24px; }
+    .stat-card {
+      background:#fff; border-radius:14px; border:1px solid var(--border);
+      padding:18px 20px;
+      box-shadow:0 1px 4px rgba(0,0,0,0.04);
+    }
+    .stat-label { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-m); margin-bottom:6px; }
+    .stat-val   { font-size:1.9rem; font-weight:800; }
+
+    /* Badges */
+    .cb { display:inline-block; padding:2px 10px; border-radius:99px; font-size:0.75rem; font-weight:600; }
+    .cb-active    { background:#d1fae5; color:#065f46; }
+    .cb-scheduled { background:#dbeafe; color:#1e40af; }
+    .cb-completed { background:#e0e7ff; color:#3730a3; }
+    .cb-missed    { background:#fee2e2; color:#991b1b; }
+    .cb-expired   { background:#fef3c7; color:#92400e; }
+    .cb-withdrawn { background:#f1f5f9; color:#475569; }
+
+    /* Table */
+    .c-table { width:100%; border-collapse:collapse; font-size:0.86rem; }
+    .c-table th { padding:10px 14px; background:#f8fafc; font-weight:600; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-m); border-bottom:1px solid var(--border); text-align:left; }
+    .c-table td { padding:12px 14px; border-bottom:1px solid #f1f5f9; color:var(--text-s); }
+    .c-table tr:last-child td { border-bottom:none; }
+    .c-table tr:hover td { background:#fafafa; }
+
+    /* Alerts */
+    .c-alert { padding:12px 16px; border-radius:10px; font-size:0.86rem; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+    .c-alert-warning { background:#fffbeb; border:1px solid #fde68a; color:#92400e; }
+    .c-alert-info    { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; }
+    .c-alert-success { background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; }
+  </style>
+  @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+
+  <!-- Customer Sidebar -->
+  <nav id="cust-sidebar">
+    <div class="cs-brand">
+      <div class="brand-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+      <h1>PediTrack</h1>
+      <p>Guardian Portal</p>
+    </div>
+    <div class="cs-nav">
+      <span class="cs-section">My Portal</span>
+      <a class="cs-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")"
+         href="@Url.Action("Index","CustomerDashboard")">
+        <i class="fa-solid fa-house"></i> Dashboard
+      </a>
+      <a class="cs-link @(ViewContext.RouteData.Values["action"]?.ToString() == "MyProfile" ? "active" : "")"
+         href="@Url.Action("MyProfile","CustomerDashboard")">
+        <i class="fa-solid fa-child-reaching"></i> My Child's Profile
+      </a>
+      <a class="cs-link @(ViewContext.RouteData.Values["action"]?.ToString() == "MyStudies" ? "active" : "")"
+         href="@Url.Action("MyStudies","CustomerDashboard")">
+        <i class="fa-solid fa-flask"></i> My Studies
+      </a>
+      <a class="cs-link @(ViewContext.RouteData.Values["action"]?.ToString() == "MyVisits" ? "active" : "")"
+         href="@Url.Action("MyVisits","CustomerDashboard")">
+        <i class="fa-solid fa-calendar-check"></i> My Visits
+      </a>
+      <a class="cs-link @(ViewContext.RouteData.Values["action"]?.ToString() == "MyConsents" ? "active" : "")"
+         href="@Url.Action("MyConsents","CustomerDashboard")">
+        <i class="fa-solid fa-file-signature"></i> Consent Forms
+      </a>
+    </div>
+    <div class="cs-footer">
+      <div class="cs-footer-text"><i class="fa-solid fa-hospital-user" style="margin-right:5px;"></i>Meridian Children's Hospital</div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div id="cust-main">
+    <header class="cust-topbar">
+      <span class="cust-topbar-title">@(ViewData["PageTitle"] ?? ViewData["Title"] ?? "Guardian Portal")</span>
+      <div class="cust-topbar-user">
+        <div class="cust-avatar">@(User.FindFirst("displayName")?.Value?.Substring(0,1).ToUpper() ?? "G")</div>
+        <span style="color:var(--text-s);">@(User.FindFirst("displayName")?.Value ?? User.Identity?.Name)</span>
+        <form asp-controller="Auth" asp-action="Logout" method="post" style="margin:0;">
+          @Html.AntiForgeryToken()
+          <button type="submit" class="btn-logout">
+            <i class="fa-solid fa-right-from-bracket" style="margin-right:5px;"></i>Logout
+          </button>
+        </form>
+      </div>
+    </header>
+
+    @if (TempData["Success"] != null)
+    {
+      <div style="padding:12px 28px 0;">
+        <div class="c-alert c-alert-success"><i class="fa-solid fa-circle-check"></i><span>@TempData["Success"]</span></div>
+      </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+      <div style="padding:12px 28px 0;">
+        <div class="c-alert" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;">
+          <i class="fa-solid fa-circle-exclamation"></i><span>@TempData["Error"]</span>
+        </div>
+      </div>
+    }
+
+    <main class="cust-body">
+      @RenderBody()
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted) { window.location.reload(); }
+    });
+  </script>
+  @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,7 @@ using PediTrack.Services;
 
 namespace PediTrack.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class VisitsController : Controller
     {
         private readonly IVisitService _service;

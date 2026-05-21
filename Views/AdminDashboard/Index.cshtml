@@ -1,0 +1,93 @@
+@model PediTrack.Models.ViewModels.AdminDashboardSummaryViewModel
+@{
+    ViewData["Title"]     = "User Management";
+    ViewData["PageTitle"] = "User Management Hub";
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-users-gear" style="color:var(--primary);margin-right:10px;"></i>User Management</h2>
+        <p>Manage admin and customer accounts for PediTrack</p>
+    </div>
+    <a href="@Url.Action("CreateUser")" class="btn btn-primary">
+        <i class="fa-solid fa-user-plus"></i> New User
+    </a>
+</div>
+
+<!-- Summary Cards -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;">
+    <div class="card" style="border-left:4px solid var(--primary);">
+        <div class="card-body" style="padding:18px 20px;">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Total Users</div>
+            <div style="font-size:2rem;font-weight:800;color:var(--primary);">@Model.TotalUsers</div>
+        </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--success);">
+        <div class="card-body" style="padding:18px 20px;">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Active</div>
+            <div style="font-size:2rem;font-weight:800;color:var(--success);">@Model.ActiveUsers</div>
+        </div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--info);">
+        <div class="card-body" style="padding:18px 20px;">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Admins</div>
+            <div style="font-size:2rem;font-weight:800;color:var(--info);">@Model.AdminCount</div>
+        </div>
+    </div>
+    <div class="card" style="border-left:4px solid #0891b2;">
+        <div class="card-body" style="padding:18px 20px;">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Customers</div>
+            <div style="font-size:2rem;font-weight:800;color:#0891b2;">@Model.CustomerCount</div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Users -->
+<div class="card">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <span><i class="fa-solid fa-clock-rotate-left" style="margin-right:8px;color:var(--primary);"></i>Recently Added Users</span>
+        <a href="@Url.Action("Users")" class="btn btn-secondary" style="padding:5px 14px;font-size:0.82rem;">View All</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th><th>Email</th><th>Role</th><th>Linked Participant</th><th>Status</th><th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model.RecentUsers)
+                {
+                    <tr>
+                        <td style="font-weight:600;">@u.DisplayName</td>
+                        <td style="color:var(--text-secondary);font-size:0.85rem;">@u.Email</td>
+                        <td>
+                            @if (u.Role == "Admin")
+                            {
+                                <span class="badge" style="background:#fef3c7;color:#92400e;">Admin</span>
+                            }
+                            else
+                            {
+                                <span class="badge" style="background:#e0f2fe;color:#0369a1;">Customer</span>
+                            }
+                        </td>
+                        <td style="font-size:0.84rem;color:var(--text-secondary);">
+                            @(u.LinkedParticipant ?? "—")
+                        </td>
+                        <td>
+                            @if (u.IsActive)
+                            {
+                                <span class="badge badge-active">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-withdrawn">Inactive</span>
+                            }
+                        </td>
+                        <td style="font-size:0.82rem;color:var(--text-muted);">@u.CreatedAt.ToString("MMM d, yyyy")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

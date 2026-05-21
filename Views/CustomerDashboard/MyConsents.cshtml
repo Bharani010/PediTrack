@@ -1,0 +1,102 @@
+@model List<PediTrack.Models.ConsentForm>
+@{
+    Layout = "_CustomerLayout";
+    ViewData["Title"]     = "Consent Forms";
+    ViewData["PageTitle"] = "My Consent Forms";
+}
+
+@if (!Model.Any())
+{
+    <div style="text-align:center;padding:60px 20px;color:var(--text-m);">
+        <i class="fa-solid fa-file-signature" style="font-size:3rem;margin-bottom:16px;display:block;opacity:0.3;"></i>
+        <p>No consent forms on record.</p>
+    </div>
+}
+else
+{
+    @foreach (var c in Model)
+    {
+        var isExpired = c.Status == "Expired" || (c.ExpirationDate.HasValue && c.ExpirationDate.Value < DateTime.Today);
+        var expiringSoon = c.Status == "Active" && c.ExpirationDate.HasValue && c.ExpirationDate.Value <= DateTime.Today.AddMonths(2);
+
+        <div class="c-card" style="border-left:4px solid @(isExpired ? "#ef4444" : expiringSoon ? "#f59e0b" : "#10b981");">
+            <div class="c-card-header" style="justify-content:space-between;">
+                <div>
+                    <i class="fa-solid fa-file-signature" style="color:#0891b2;margin-right:8px;"></i>
+                    @c.Study?.StudyName
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <span class="cb @(c.Status == "Active" ? "cb-active" : c.Status == "Expired" ? "cb-expired" : "cb-withdrawn")">@c.Status</span>
+                    @if (c.ReconsentRequired)
+                    {
+                        <span class="cb" style="background:#fef3c7;color:#92400e;font-size:0.7rem;">Re-consent needed</span>
+                    }
+                </div>
+            </div>
+            <div class="c-card-body">
+                @if (isExpired)
+                {
+                    <div class="c-alert" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;margin-bottom:16px;">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>This consent form has expired. Please contact the study coordinator to renew.</span>
+                    </div>
+                }
+                @if (expiringSoon && !isExpired)
+                {
+                    <div class="c-alert c-alert-warning" style="margin-bottom:16px;">
+                        <i class="fa-solid fa-clock"></i>
+                        <span>This consent form expires on @c.ExpirationDate!.Value.ToString("MMMM d, yyyy"). The study team will contact you.</span>
+                    </div>
+                }
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;">
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Study Code</div>
+                        <div style="font-weight:600;color:#0891b2;">@c.Study?.StudyCode</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Consent Date</div>
+                        <div>@c.ConsentDate.ToString("MMMM d, yyyy")</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Expiration Date</div>
+                        <div style="@(isExpired ? "color:#ef4444;font-weight:600;" : "")">
+                            @(c.ExpirationDate.HasValue ? c.ExpirationDate.Value.ToString("MMMM d, yyyy") : "—")
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Form Version</div>
+                        <div>v@c.Version</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Signed by Guardian</div>
+                        <div>
+                            @if (c.SignedByGuardian)
+                            {
+                                <span style="color:#10b981;font-weight:600;"><i class="fa-solid fa-check" style="margin-right:4px;"></i>Yes</span>
+                            }
+                            else
+                            {
+                                <span style="color:#f59e0b;font-weight:600;"><i class="fa-solid fa-exclamation" style="margin-right:4px;"></i>Pending</span>
+                            }
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(c.WitnessName))
+                    {
+                        <div>
+                            <div style="font-size:0.72rem;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Witness</div>
+                            <div style="font-size:0.85rem;">@c.WitnessName</div>
+                        </div>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(c.Notes))
+                {
+                    <div style="margin-top:12px;padding:10px 14px;background:#f8fafc;border-radius:8px;font-size:0.84rem;color:var(--text-s);">
+                        <i class="fa-solid fa-note-sticky" style="margin-right:6px;color:var(--text-m);"></i>@c.Notes
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}

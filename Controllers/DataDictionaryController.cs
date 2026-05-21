@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PediTrack.Data;
@@ -5,6 +6,7 @@ using PediTrack.Models;
 
 namespace PediTrack.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class DataDictionaryController : Controller
     {
         private readonly ApplicationDbContext _db;

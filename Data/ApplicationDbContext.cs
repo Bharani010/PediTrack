@@ -1,30 +1,32 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using PediTrack.Models;
 using PediTrack.Models.ViewModels;
 
 namespace PediTrack.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<AppUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options) { }
 
-        public DbSet<Participant> Participants { get; set; }
-        public DbSet<Study> Studies { get; set; }
-        public DbSet<StudyEnrollment> StudyEnrollments { get; set; }
-        public DbSet<Visit> Visits { get; set; }
-        public DbSet<ConsentForm> ConsentForms { get; set; }
-        public DbSet<Investigator> Investigators { get; set; }
+        public DbSet<Participant>        Participants        { get; set; }
+        public DbSet<Study>              Studies             { get; set; }
+        public DbSet<StudyEnrollment>    StudyEnrollments    { get; set; }
+        public DbSet<Visit>              Visits              { get; set; }
+        public DbSet<ConsentForm>        ConsentForms        { get; set; }
+        public DbSet<Investigator>       Investigators       { get; set; }
         public DbSet<DataDictionaryEntry> DataDictionaryEntries { get; set; }
 
         // Keyless entities for raw SQL — view and stored procedure results
-        public DbSet<StudyEnrollmentSummaryRow> StudyEnrollmentSummary { get; set; }
-        public DbSet<EnrollmentSummaryResult> EnrollmentSummaryResults { get; set; }
-        public DbSet<ParticipantVisitHistoryRow> ParticipantVisitHistory { get; set; }
+        public DbSet<StudyEnrollmentSummaryRow>  StudyEnrollmentSummary  { get; set; }
+        public DbSet<EnrollmentSummaryResult>    EnrollmentSummaryResults { get; set; }
+        public DbSet<ParticipantVisitHistoryRow> ParticipantVisitHistory  { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
+            base.OnModelCreating(modelBuilder); // must call — configures Identity tables
 
             // Participant
             modelBuilder.Entity<Participant>(e =>
@@ -45,7 +47,7 @@ namespace PediTrack.Data
                  .OnDelete(DeleteBehavior.SetNull);
             });
 
-            // StudyEnrollment — composite natural uniqueness
+            // StudyEnrollment — composite uniqueness
             modelBuilder.Entity<StudyEnrollment>(e =>
             {
                 e.HasIndex(se => new { se.ParticipantId, se.StudyId }).IsUnique();
@@ -92,6 +94,16 @@ namespace PediTrack.Data
             // Investigator FullName is computed
             modelBuilder.Entity<Investigator>()
                 .Ignore(i => i.FullName);
+
+            // AppUser → Participant (optional link for Customer role)
+            modelBuilder.Entity<AppUser>(e =>
+            {
+                e.HasOne(u => u.Participant)
+                 .WithMany()
+                 .HasForeignKey(u => u.ParticipantId)
+                 .OnDelete(DeleteBehavior.SetNull)
+                 .IsRequired(false);
+            });
 
             // Map view and SP result types as keyless entities
             modelBuilder.Entity<StudyEnrollmentSummaryRow>().HasNoKey().ToView("vw_StudyEnrollmentSummary");
