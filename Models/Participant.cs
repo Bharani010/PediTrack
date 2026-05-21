@@ -30,12 +30,12 @@ namespace PediTrack.Models
         [Required, StringLength(20)]
         public string Gender { get; set; } = string.Empty;
 
-        [Required, StringLength(200), Display(Name = "Guardian Name")]
-        public string GuardianName { get; set; } = string.Empty;
+        [StringLength(200), Display(Name = "Guardian Name")]
+        public string? GuardianName { get; set; }
 
-        [Required, StringLength(20), Display(Name = "Guardian Phone")]
+        [StringLength(20), Display(Name = "Guardian Phone")]
         [Phone]
-        public string GuardianPhone { get; set; } = string.Empty;
+        public string? GuardianPhone { get; set; }
 
         [StringLength(254), Display(Name = "Guardian Email")]
         [EmailAddress]

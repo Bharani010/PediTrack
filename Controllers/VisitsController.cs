@@ -64,7 +64,7 @@ namespace PediTrack.Controllers
         {
             var visit = await _service.GetByIdAsync(id);
             if (visit == null) return NotFound();
-            await PopulateDropdowns(visit.ParticipantId);
+            await PopulateDropdowns(visit.ParticipantId, visit.VisitType, visit.Location);
             return View(visit);
         }
 
@@ -74,7 +74,7 @@ namespace PediTrack.Controllers
             if (id != visit.VisitId) return BadRequest();
             if (!ModelState.IsValid)
             {
-                await PopulateDropdowns(visit.ParticipantId);
+                await PopulateDropdowns(visit.ParticipantId, visit.VisitType, visit.Location);
                 return View(visit);
             }
             await _service.UpdateAsync(visit);
@@ -109,22 +109,35 @@ namespace PediTrack.Controllers
             return Json(new { success = true });
         }
 
-        private async Task PopulateDropdowns(int? selectedParticipantId = null)
+        private async Task PopulateDropdowns(int? selectedParticipantId = null, string? selectedVisitType = null, string? selectedLocation = null)
         {
+            // Show ALL participants and studies so existing records with any status always appear in dropdowns
             ViewBag.Participants = new SelectList(
-                await _db.Participants.Where(p => p.Status == "Active").OrderBy(p => p.LastName).ToListAsync(),
+                await _db.Participants.OrderBy(p => p.LastName).ThenBy(p => p.FirstName).ToListAsync(),
                 "ParticipantId", "FullName", selectedParticipantId);
 
             ViewBag.Studies = new SelectList(
-                await _db.Studies.Where(s => s.Status == "Active" || s.Status == "Recruiting").OrderBy(s => s.StudyName).ToListAsync(),
+                await _db.Studies.OrderBy(s => s.StudyName).ToListAsync(),
                 "StudyId", "StudyName");
 
             ViewBag.Staff = new SelectList(
                 await _db.Investigators.Where(i => i.Status == "Active").OrderBy(i => i.LastName).ToListAsync(),
                 "InvestigatorId", "FullName");
 
-            ViewBag.VisitTypes = new SelectList(new[] { "Screening", "Baseline", "Follow-up", "Annual", "Final", "Unscheduled" });
-            ViewBag.Statuses   = new SelectList(new[] { "Scheduled", "Completed", "Missed", "Cancelled", "Rescheduled" });
+            var visitTypes = new[] { "Screening", "Baseline", "Follow-up", "Annual", "Final", "Unscheduled" };
+            ViewBag.VisitTypes = new SelectList(visitTypes, selectedVisitType);
+
+            ViewBag.Statuses = new SelectList(new[] { "Scheduled", "Completed", "Missed", "Cancelled", "Rescheduled" });
+
+            var locations = new[] {
+                "Clinic A", "Clinic B", "Cardiology Lab", "Neuro Unit",
+                "Oncology Ward", "Surgery Suite", "Infusion Center",
+                "Outpatient / General", "Telehealth / Remote"
+            };
+            // If existing location isn't in the list, add it so editing never silently changes the value
+            if (!string.IsNullOrWhiteSpace(selectedLocation) && !locations.Contains(selectedLocation))
+                locations = locations.Append(selectedLocation).ToArray();
+            ViewBag.Locations = new SelectList(locations, selectedLocation);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace PediTrack.Models
 {
@@ -9,10 +10,12 @@ namespace PediTrack.Models
 
         [Required]
         public int ParticipantId { get; set; }
+        [ValidateNever]
         public Participant Participant { get; set; } = null!;
 
         [Required]
         public int StudyId { get; set; }
+        [ValidateNever]
         public Study Study { get; set; } = null!;
 
         [Required, Display(Name = "Enrollment Date")]
@@ -30,7 +33,7 @@ namespace PediTrack.Models
         public string? WithdrawalReason { get; set; }
 
         [StringLength(50), Display(Name = "Subject ID")]
-        public string? SubjectId { get; set; } // Study-specific subject number
+        public string? SubjectId { get; set; }
 
         [StringLength(1000)]
         public string? Notes { get; set; }

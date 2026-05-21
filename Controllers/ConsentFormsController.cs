@@ -64,7 +64,10 @@ namespace PediTrack.Controllers
 
         public async Task<IActionResult> Edit(int id)
         {
-            var consent = await _db.ConsentForms.FindAsync(id);
+            var consent = await _db.ConsentForms
+                .Include(c => c.Participant)
+                .Include(c => c.Study)
+                .FirstOrDefaultAsync(c => c.ConsentFormId == id);
             if (consent == null) return NotFound();
             await PopulateDropdowns(consent.ParticipantId);
             return View(consent);
@@ -79,10 +82,24 @@ namespace PediTrack.Controllers
                 await PopulateDropdowns(consent.ParticipantId);
                 return View(consent);
             }
-            _db.ConsentForms.Update(consent);
+
+            // Fetch existing record and update only scalar fields
+            var existing = await _db.ConsentForms.FindAsync(id);
+            if (existing == null) return NotFound();
+            existing.ParticipantId      = consent.ParticipantId;
+            existing.StudyId            = consent.StudyId;
+            existing.ConsentDate        = consent.ConsentDate;
+            existing.ExpirationDate     = consent.ExpirationDate;
+            existing.Version            = consent.Version;
+            existing.SignedByGuardian   = consent.SignedByGuardian;
+            existing.WitnessName        = consent.WitnessName;
+            existing.Status             = consent.Status;
+            existing.ReconsentRequired  = consent.ReconsentRequired;
+            existing.Notes              = consent.Notes;
+
             await _db.SaveChangesAsync();
-            TempData["Success"] = "Consent form updated.";
-            return RedirectToAction(nameof(Index));
+            TempData["Success"] = "Consent form updated successfully.";
+            return RedirectToAction(nameof(Details), new { id });
         }
 
         public async Task<IActionResult> Delete(int id)

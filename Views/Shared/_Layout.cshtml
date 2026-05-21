@@ -139,6 +139,11 @@
     document.querySelectorAll('.alert').forEach(el => {
       setTimeout(() => { el.style.transition = 'opacity 0.4s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 5000);
     });
+
+    // Reload page if restored from bfcache (browser Back button) so data is always fresh
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted) { window.location.reload(); }
+    });
   </script>
 
   @await RenderSectionAsync("Scripts", required: false)

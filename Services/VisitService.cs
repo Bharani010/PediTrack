@@ -43,10 +43,21 @@ namespace PediTrack.Services
 
         public async Task<Visit> UpdateAsync(Visit visit)
         {
-            visit.UpdatedAt = DateTime.UtcNow;
-            _db.Visits.Update(visit);
+            var existing = await _db.Visits.FindAsync(visit.VisitId)
+                           ?? throw new InvalidOperationException("Visit not found.");
+            existing.ParticipantId   = visit.ParticipantId;
+            existing.StudyId         = visit.StudyId;
+            existing.VisitType       = visit.VisitType;
+            existing.VisitNumber     = visit.VisitNumber;
+            existing.ScheduledDate   = visit.ScheduledDate;
+            existing.CompletedDate   = visit.CompletedDate;
+            existing.Status          = visit.Status;
+            existing.Location        = visit.Location;
+            existing.AssignedStaffId = visit.AssignedStaffId;
+            existing.Notes           = visit.Notes;
+            existing.UpdatedAt       = DateTime.UtcNow;
             await _db.SaveChangesAsync();
-            return visit;
+            return existing;
         }
 
         public async Task<bool> DeleteAsync(int id)

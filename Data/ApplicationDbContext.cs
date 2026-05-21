@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PediTrack.Models;
+using PediTrack.Models.ViewModels;
 
 namespace PediTrack.Data
 {
@@ -15,6 +16,11 @@ namespace PediTrack.Data
         public DbSet<ConsentForm> ConsentForms { get; set; }
         public DbSet<Investigator> Investigators { get; set; }
         public DbSet<DataDictionaryEntry> DataDictionaryEntries { get; set; }
+
+        // Keyless entities for raw SQL — view and stored procedure results
+        public DbSet<StudyEnrollmentSummaryRow> StudyEnrollmentSummary { get; set; }
+        public DbSet<EnrollmentSummaryResult> EnrollmentSummaryResults { get; set; }
+        public DbSet<ParticipantVisitHistoryRow> ParticipantVisitHistory { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -86,6 +92,11 @@ namespace PediTrack.Data
             // Investigator FullName is computed
             modelBuilder.Entity<Investigator>()
                 .Ignore(i => i.FullName);
+
+            // Map view and SP result types as keyless entities
+            modelBuilder.Entity<StudyEnrollmentSummaryRow>().HasNoKey().ToView("vw_StudyEnrollmentSummary");
+            modelBuilder.Entity<EnrollmentSummaryResult>().HasNoKey();
+            modelBuilder.Entity<ParticipantVisitHistoryRow>().HasNoKey();
         }
     }
 }

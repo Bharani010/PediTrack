@@ -21,8 +21,9 @@ namespace PediTrack.Services
             await _db.Studies
                 .Include(s => s.PrincipalInvestigator)
                 .Include(s => s.StudyEnrollments).ThenInclude(se => se.Participant)
-                .Include(s => s.Visits)
-                .Include(s => s.ConsentForms)
+                .Include(s => s.Visits).ThenInclude(v => v.Participant)
+                .Include(s => s.Visits).ThenInclude(v => v.AssignedStaff)
+                .Include(s => s.ConsentForms).ThenInclude(c => c.Participant)
                 .FirstOrDefaultAsync(s => s.StudyId == id);
 
         public async Task<Study> CreateAsync(Study study)
@@ -36,10 +37,22 @@ namespace PediTrack.Services
 
         public async Task<Study> UpdateAsync(Study study)
         {
-            study.UpdatedAt = DateTime.UtcNow;
-            _db.Studies.Update(study);
+            var existing = await _db.Studies.FindAsync(study.StudyId)
+                           ?? throw new InvalidOperationException("Study not found.");
+            existing.StudyCode               = study.StudyCode;
+            existing.StudyName               = study.StudyName;
+            existing.IRBNumber               = study.IRBNumber;
+            existing.Description             = study.Description;
+            existing.StartDate               = study.StartDate;
+            existing.EndDate                 = study.EndDate;
+            existing.Status                  = study.Status;
+            existing.MaxParticipants         = study.MaxParticipants;
+            existing.Sponsor                 = study.Sponsor;
+            existing.Phase                   = study.Phase;
+            existing.PrincipalInvestigatorId = study.PrincipalInvestigatorId;
+            existing.UpdatedAt               = DateTime.UtcNow;
             await _db.SaveChangesAsync();
-            return study;
+            return existing;
         }
 
         public async Task<bool> DeleteAsync(int id)

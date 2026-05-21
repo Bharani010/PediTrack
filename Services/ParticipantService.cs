@@ -48,10 +48,24 @@ namespace PediTrack.Services
 
         public async Task<Participant> UpdateAsync(Participant participant)
         {
-            participant.UpdatedAt = DateTime.UtcNow;
-            _db.Participants.Update(participant);
+            // Fetch tracked entity so navigation collections are preserved
+            var existing = await _db.Participants.FindAsync(participant.ParticipantId)
+                           ?? throw new InvalidOperationException("Participant not found.");
+            existing.MRN            = participant.MRN;
+            existing.FirstName      = participant.FirstName;
+            existing.LastName       = participant.LastName;
+            existing.DateOfBirth    = participant.DateOfBirth;
+            existing.Gender         = participant.Gender;
+            existing.GuardianName   = participant.GuardianName;
+            existing.GuardianPhone  = participant.GuardianPhone;
+            existing.GuardianEmail  = participant.GuardianEmail;
+            existing.Address        = participant.Address;
+            existing.EnrollmentDate = participant.EnrollmentDate;
+            existing.Status         = participant.Status;
+            existing.Notes          = participant.Notes;
+            existing.UpdatedAt      = DateTime.UtcNow;
             await _db.SaveChangesAsync();
-            return participant;
+            return existing;
         }
 
         public async Task<bool> DeleteAsync(int id)

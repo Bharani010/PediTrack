@@ -1,0 +1,34 @@
+## .NET / ASP.NET Core
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+*.userprefs
+*.lock.json
+
+## Build outputs
+*.dll
+*.exe
+*.pdb
+*.nupkg
+*.snupkg
+
+## EF Core
+*.db
+*.sqlite
+
+## Logs
+*.log
+logs/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Rider / JetBrains
+.idea/
+
+## Publish output
+publish/

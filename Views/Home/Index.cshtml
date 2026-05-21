@@ -4,7 +4,7 @@
     ViewData["PageTitle"] = "Dashboard";
 }
 
-<!-- ── STAT CARDS ── -->
+<!-- ── STAT CARDS ─────────────────────────────────────────────────────── -->
 <div class="stat-grid">
     <div class="stat-card">
         <div class="stat-icon blue"><i class="fa-solid fa-child-reaching"></i></div>
@@ -19,7 +19,7 @@
         <div class="stat-info">
             <div class="stat-value">@Model.TotalStudies</div>
             <div class="stat-label">Research Studies</div>
-            <div class="stat-delta up"><i class="fa-solid fa-circle-check"></i> @Model.ActiveStudies active</div>
+            <div class="stat-delta up"><i class="fa-solid fa-circle-check"></i> @Model.ActiveStudies active / recruiting</div>
         </div>
     </div>
     <div class="stat-card">
@@ -27,7 +27,7 @@
         <div class="stat-info">
             <div class="stat-value">@Model.UpcomingVisits</div>
             <div class="stat-label">Upcoming Visits (14 days)</div>
-            <div class="stat-delta"><i class="fa-regular fa-calendar"></i> @Model.TotalVisits total</div>
+            <div class="stat-delta"><i class="fa-regular fa-calendar"></i> @Model.TotalVisits total scheduled</div>
         </div>
     </div>
     <div class="stat-card">
@@ -40,7 +40,7 @@
     </div>
     @if (Model.ExpiredConsents > 0 || Model.MissedVisits > 0)
     {
-        <div class="stat-card" style="border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.03);">
+        <div class="stat-card" style="border-color:rgba(239,68,68,0.25);background:rgba(239,68,68,0.03);">
             <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
             <div class="stat-info">
                 <div class="stat-value" style="color:var(--danger);">@(Model.ExpiredConsents + Model.MissedVisits)</div>
@@ -51,23 +51,35 @@
     }
     @if (Model.ExpiringConsentsThisMonth > 0)
     {
-        <div class="stat-card" style="border-color: rgba(245,158,11,0.25);">
+        <div class="stat-card" style="border-color:rgba(245,158,11,0.25);">
             <div class="stat-icon amber"><i class="fa-solid fa-file-signature"></i></div>
             <div class="stat-info">
                 <div class="stat-value" style="color:var(--warning);">@Model.ExpiringConsentsThisMonth</div>
                 <div class="stat-label">Consents Expiring This Month</div>
-                <div class="stat-delta down"><i class="fa-solid fa-clock"></i> Renewal required</div>
+                <div class="stat-delta down"><i class="fa-solid fa-clock"></i> Renewal required soon</div>
+            </div>
+        </div>
+    }
+    @if (Model.PendingConsents > 0)
+    {
+        <div class="stat-card" style="border-color:rgba(245,158,11,0.2);">
+            <div class="stat-icon amber"><i class="fa-solid fa-pen-to-square"></i></div>
+            <div class="stat-info">
+                <div class="stat-value" style="color:var(--warning);">@Model.PendingConsents</div>
+                <div class="stat-label">Unsigned Consents</div>
+                <div class="stat-delta down"><i class="fa-solid fa-hourglass-half"></i> Awaiting guardian signature</div>
             </div>
         </div>
     }
 </div>
 
-<!-- ── CHARTS ROW ── -->
-<div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:20px; margin-bottom:24px;">
+<!-- ── ROW 1: Enrollment Trend + Study Status + Visit Status ─────────── -->
+<div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:20px;margin-bottom:24px;">
 
     <div class="card">
         <div class="card-header">
-            <span class="card-header-title"><i class="fa-solid fa-chart-line" style="color:var(--primary);margin-right:8px;"></i>Enrollment Trend — Last 6 Months</span>
+            <span class="card-header-title"><i class="fa-solid fa-chart-line" style="color:var(--primary);margin-right:8px;"></i>Enrollment Trend</span>
+            <span style="font-size:0.75rem;color:var(--text-muted);">@Model.EnrollmentMonths.FirstOrDefault() – @Model.EnrollmentMonths.LastOrDefault()</span>
         </div>
         <div class="card-body">
             <div class="chart-container" style="height:220px;">
@@ -99,8 +111,63 @@
     </div>
 </div>
 
-<!-- ── BOTTOM ROW ── -->
-<div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+<!-- ── ROW 2: Active Enrollments per Study + Age Distribution ────────── -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-header-title"><i class="fa-solid fa-chart-bar" style="color:var(--primary);margin-right:8px;"></i>Active Enrollments per Study</span>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="height:200px;">
+                <canvas id="studyEnrollChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-header-title"><i class="fa-solid fa-children" style="color:var(--primary);margin-right:8px;"></i>Participant Age Distribution</span>
+            <span style="font-size:0.75rem;color:var(--text-muted);">Active participants only</span>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="height:200px;">
+                <canvas id="ageChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── ROW 3: Study Progress + Upcoming Visits ───────────────────────── -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+
+    <!-- Study Enrollment Progress -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-header-title"><i class="fa-solid fa-list-check" style="color:var(--primary);margin-right:8px;"></i>Study Enrollment Progress</span>
+        </div>
+        <div class="card-body" style="padding:16px 20px;">
+            @foreach (var s in Model.StudyProgress)
+            {
+                var pct = s.Percentage;
+                var barColor = pct >= 80 ? "var(--success)" : pct >= 50 ? "var(--primary)" : "var(--accent2)";
+                <div style="margin-bottom:14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <span style="font-size:0.82rem;font-weight:600;">@s.StudyCode</span>
+                        <span style="font-size:0.78rem;color:var(--text-muted);">@s.Enrolled / @(s.MaxParticipants > 0 ? s.MaxParticipants.ToString() : "∞") enrolled · <span class="badge badge-@s.Status.ToLower()" style="font-size:0.7rem;">@s.Status</span></span>
+                    </div>
+                    <div style="height:8px;background:var(--bg-secondary);border-radius:4px;overflow:hidden;">
+                        <div style="height:100%;width:@(Math.Min(pct,100))%;background:@barColor;border-radius:4px;transition:width 0.6s ease;"></div>
+                    </div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;">@s.StudyName</div>
+                </div>
+            }
+            @if (!Model.StudyProgress.Any())
+            {
+                <p style="color:var(--text-muted);font-size:0.85rem;">No active studies found.</p>
+            }
+        </div>
+    </div>
 
     <!-- Upcoming Visits -->
     <div class="card">
@@ -112,9 +179,7 @@
         {
             <div class="table-wrapper">
                 <table class="table">
-                    <thead>
-                        <tr><th>Participant</th><th>Study</th><th>Type</th><th>Date</th></tr>
-                    </thead>
+                    <thead><tr><th>Participant</th><th>Study</th><th>Type</th><th>Date</th></tr></thead>
                     <tbody>
                         @foreach (var v in Model.UpcomingVisitList)
                         {
@@ -122,7 +187,7 @@
                                 <td><a href="@Url.Action("Details","Participants",new{id=v.ParticipantId})" style="color:var(--primary);font-weight:600;text-decoration:none;">@v.Participant?.FirstName @v.Participant?.LastName</a></td>
                                 <td style="font-size:0.8rem;color:var(--text-secondary);">@v.Study?.StudyCode</td>
                                 <td><span class="badge badge-scheduled">@v.VisitType</span></td>
-                                <td style="font-size:0.82rem;">@v.ScheduledDate.ToString("MMM d, yyyy")</td>
+                                <td style="font-size:0.82rem;">@v.ScheduledDate.ToString("MMM d")</td>
                             </tr>
                         }
                     </tbody>
@@ -138,58 +203,56 @@
             </div>
         }
     </div>
+</div>
 
-    <!-- Recent Enrollments -->
-    <div class="card">
-        <div class="card-header">
-            <span class="card-header-title"><i class="fa-solid fa-user-plus" style="color:var(--primary);margin-right:8px;"></i>Recent Enrollments</span>
-            <a href="@Url.Action("Index","Participants")" class="btn btn-glass btn-sm">View All</a>
-        </div>
-        @if (Model.RecentEnrollments.Any())
-        {
-            <div class="table-wrapper">
-                <table class="table">
-                    <thead>
-                        <tr><th>Participant</th><th>Study</th><th>Date</th><th>Status</th></tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var e in Model.RecentEnrollments)
-                        {
-                            <tr>
-                                <td><a href="@Url.Action("Details","Participants",new{id=e.ParticipantId})" style="color:var(--primary);font-weight:600;text-decoration:none;">@e.Participant?.FirstName @e.Participant?.LastName</a></td>
-                                <td style="font-size:0.8rem;color:var(--text-secondary);">@e.Study?.StudyCode</td>
-                                <td style="font-size:0.82rem;">@e.EnrollmentDate.ToString("MMM d, yyyy")</td>
-                                <td>
-                                    <span class="badge badge-@e.Status.ToLower()">@e.Status</span>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-        else
-        {
-            <div class="empty-state">
-                <div class="empty-state-icon"><i class="fa-solid fa-users"></i></div>
-                <h4>No enrollments yet</h4>
-            </div>
-        }
+<!-- ── ROW 4: Recent Enrollments ─────────────────────────────────────── -->
+<div class="card">
+    <div class="card-header">
+        <span class="card-header-title"><i class="fa-solid fa-user-plus" style="color:var(--primary);margin-right:8px;"></i>Recent Enrollments</span>
+        <a href="@Url.Action("Index","Participants")" class="btn btn-glass btn-sm">View All</a>
     </div>
+    @if (Model.RecentEnrollments.Any())
+    {
+        <div class="table-wrapper">
+            <table class="table">
+                <thead><tr><th>Participant</th><th>Study</th><th>Subject ID</th><th>Date</th><th>Status</th></tr></thead>
+                <tbody>
+                    @foreach (var e in Model.RecentEnrollments)
+                    {
+                        <tr>
+                            <td><a href="@Url.Action("Details","Participants",new{id=e.ParticipantId})" style="color:var(--primary);font-weight:600;text-decoration:none;">@e.Participant?.FirstName @e.Participant?.LastName</a></td>
+                            <td style="font-size:0.8rem;color:var(--text-secondary);">@e.Study?.StudyCode<br/><span style="font-size:0.72rem;">@e.Study?.StudyName</span></td>
+                            <td><code style="font-size:0.78rem;">@(e.SubjectId ?? "—")</code></td>
+                            <td style="font-size:0.82rem;">@e.EnrollmentDate.ToString("MMM d, yyyy")</td>
+                            <td><span class="badge badge-@e.Status.ToLower()">@e.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-users"></i></div>
+            <h4>No enrollments yet</h4>
+        </div>
+    }
 </div>
 
 @section Scripts {
 <script>
-const orangePalette = ['#ea580c','#f97316','#fb923c','#fdba74','#fed7aa','#8b5cf6','#10b981','#ef4444'];
+const palette = ['#ea580c','#3b82f6','#10b981','#8b5cf6','#f59e0b','#ef4444','#06b6d4','#84cc16'];
 const gridColor = 'rgba(0,0,0,0.05)';
+const fontOpts  = { size: 11 };
 
-// Enrollment trend line chart
+// 1. Enrollment trend — real monthly data from DB
 new Chart(document.getElementById('enrollmentChart'), {
     type: 'line',
     data: {
         labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.EnrollmentMonths)),
         datasets: [{
-            label: 'Enrollments',
+            label: 'New Enrollments',
             data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.EnrollmentCounts)),
             borderColor: '#ea580c',
             backgroundColor: 'rgba(234,88,12,0.08)',
@@ -202,39 +265,87 @@ new Chart(document.getElementById('enrollmentChart'), {
     },
     options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: { legend: { display: false },
+                   tooltip: { callbacks: { title: ctx => ctx[0].label, label: ctx => `${ctx.parsed.y} enrollment${ctx.parsed.y !== 1 ? 's' : ''}` } } },
         scales: {
-            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: gridColor } },
-            x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: fontOpts }, grid: { color: gridColor } },
+            x: { ticks: { font: fontOpts, maxRotation: 45 }, grid: { display: false } }
         }
     }
 });
 
-// Study status doughnut
+// 2. Study status doughnut
 new Chart(document.getElementById('studyChart'), {
     type: 'doughnut',
     data: {
         labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StudyStatusLabels)),
-        datasets: [{ data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StudyStatusCounts)), backgroundColor: orangePalette, borderWidth: 0 }]
+        datasets: [{ data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StudyStatusCounts)), backgroundColor: palette, borderWidth: 0 }]
     },
     options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, boxWidth: 12 } } },
+        plugins: { legend: { position: 'bottom', labels: { font: fontOpts, padding: 10, boxWidth: 12 } } },
         cutout: '65%'
     }
 });
 
-// Visit status doughnut
+// 3. Visit status doughnut
 new Chart(document.getElementById('visitChart'), {
     type: 'doughnut',
     data: {
         labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.VisitStatusLabels)),
-        datasets: [{ data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.VisitStatusCounts)), backgroundColor: orangePalette, borderWidth: 0 }]
+        datasets: [{ data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.VisitStatusCounts)), backgroundColor: palette, borderWidth: 0 }]
     },
     options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, boxWidth: 12 } } },
+        plugins: { legend: { position: 'bottom', labels: { font: fontOpts, padding: 10, boxWidth: 12 } } },
         cutout: '65%'
+    }
+});
+
+// 4. Active enrollments per study — horizontal bar
+new Chart(document.getElementById('studyEnrollChart'), {
+    type: 'bar',
+    data: {
+        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StudyEnrollmentLabels)),
+        datasets: [{
+            label: 'Active Enrollments',
+            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StudyEnrollmentCounts)),
+            backgroundColor: palette,
+            borderRadius: 5,
+            borderWidth: 0
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { beginAtZero: true, ticks: { stepSize: 1, font: fontOpts }, grid: { color: gridColor } },
+            y: { ticks: { font: fontOpts } , grid: { display: false } }
+        }
+    }
+});
+
+// 5. Age distribution — bar
+new Chart(document.getElementById('ageChart'), {
+    type: 'bar',
+    data: {
+        labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AgeGroupLabels)),
+        datasets: [{
+            label: 'Participants',
+            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AgeGroupCounts)),
+            backgroundColor: ['#3b82f6','#10b981','#8b5cf6','#ea580c'],
+            borderRadius: 5,
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: fontOpts }, grid: { color: gridColor } },
+            x: { ticks: { font: fontOpts }, grid: { display: false } }
+        }
     }
 });
 </script>

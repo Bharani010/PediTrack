@@ -1,0 +1,208 @@
+@model PediTrack.Models.ViewModels.SqlAnalyticsViewModel
+@using PediTrack.Models
+@{
+    ViewData["Title"] = "SQL Analytics";
+    ViewData["PageTitle"] = "SQL Analytics";
+    var studies = ViewBag.Studies as List<Study> ?? new List<Study>();
+}
+
+<div class="page-header">
+    <div class="page-header-title">
+        <h2><i class="fa-solid fa-database" style="color:var(--primary);margin-right:10px;"></i>SQL Analytics</h2>
+        <p>Live data from T-SQL stored procedures and views — demonstrates advanced query capabilities</p>
+    </div>
+    <div class="page-header-actions">
+        <a href="@Url.Action("Index")" class="btn btn-glass btn-sm">
+            <i class="fa-solid fa-arrow-left"></i> Back to Reports
+        </a>
+    </div>
+</div>
+
+@if (TempData["Warning"] != null)
+{
+    <div class="alert alert-warning" style="border-radius:12px;padding:14px 18px;margin-bottom:20px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#92400e;display:flex;align-items:center;gap:10px;">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>@TempData["Warning"]</span>
+    </div>
+}
+
+<!-- ── Filter bar ──────────────────────────────────────────────────────── -->
+<div class="card" style="margin-bottom:24px;">
+    <div class="card-body" style="padding:16px 20px;">
+        <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+            <div class="form-group" style="margin:0;min-width:220px;">
+                <label class="form-label">Study</label>
+                <select name="studyId" class="form-control">
+                    <option value="">— All Studies —</option>
+                    @foreach (var s in studies)
+                    {
+                        <option value="@s.StudyId" selected="@(Model.FilterStudyId == s.StudyId)">@s.StudyCode — @s.StudyName</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group" style="margin:0;min-width:160px;">
+                <label class="form-label">Study Status</label>
+                <select name="studyStatus" class="form-control">
+                    <option value="">— Any Status —</option>
+                    @foreach (var st in new[] { "Active", "Recruiting", "Closed", "Suspended" })
+                    {
+                        <option value="@st" selected="@(Model.FilterStudyStatus == st)">@st</option>
+                    }
+                </select>
+            </div>
+            <div style="display:flex;gap:8px;align-items:flex-end;">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-filter"></i> Apply Filter
+                </button>
+                <a href="@Url.Action("SqlAnalytics")" class="btn btn-glass btn-sm">
+                    <i class="fa-solid fa-xmark"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ── Section 1: DB View ──────────────────────────────────────────────── -->
+<div class="card" style="margin-bottom:28px;">
+    <div class="card-header" style="display:flex;align-items:center;gap:10px;">
+        <i class="fa-solid fa-eye" style="color:var(--primary);"></i>
+        <div>
+            <h5 style="margin:0;font-weight:700;">Study Enrollment Summary</h5>
+            <small style="color:var(--text-secondary);">Source: <code>vw_StudyEnrollmentSummary</code> (SQL Server view)</small>
+        </div>
+        <span class="badge badge-active" style="margin-left:auto;">@Model.Summary.Count studies</span>
+    </div>
+    <div class="card-body" style="padding:0;overflow-x:auto;">
+        @if (!Model.Summary.Any())
+        {
+            <div style="padding:32px;text-align:center;color:var(--text-secondary);">
+                <i class="fa-solid fa-circle-info" style="font-size:2rem;margin-bottom:12px;display:block;opacity:.4;"></i>
+                No data available — the view may not exist yet. Restart the application to create it.
+            </div>
+        }
+        else
+        {
+            <table class="table" style="margin:0;">
+                <thead>
+                    <tr>
+                        <th>Study</th>
+                        <th>Status</th>
+                        <th>Phase</th>
+                        <th class="text-center">Enrolled</th>
+                        <th class="text-center">Active</th>
+                        <th class="text-center">Completed</th>
+                        <th class="text-center">Withdrawn</th>
+                        <th class="text-center">Visits</th>
+                        <th class="text-center">Done</th>
+                        <th class="text-center">Missed</th>
+                        <th class="text-center">Upcoming</th>
+                        <th class="text-center">Consents</th>
+                        <th style="min-width:160px;">Enrollment %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Summary)
+                    {
+                        var pct     = (double)row.EnrollmentPercentage;
+                        var barCls  = pct >= 90 ? "var(--success)" : pct >= 50 ? "var(--primary)" : "var(--warning)";
+                        <tr>
+                            <td>
+                                <div style="font-weight:600;font-size:.9rem;">@row.StudyCode</div>
+                                <div style="font-size:.78rem;color:var(--text-secondary);">@row.StudyName</div>
+                            </td>
+                            <td><span class="badge badge-@row.StudyStatus.ToLower()">@row.StudyStatus</span></td>
+                            <td><span style="font-size:.82rem;">@(row.Phase ?? "—")</span></td>
+                            <td class="text-center"><strong>@row.EnrolledCount</strong><span style="color:var(--text-secondary);font-size:.8rem;">/@row.MaxParticipants</span></td>
+                            <td class="text-center"><span style="color:var(--success);">@row.ActiveEnrolled</span></td>
+                            <td class="text-center">@row.CompletedEnrolled</td>
+                            <td class="text-center"><span style="color:var(--danger);">@row.WithdrawnCount</span></td>
+                            <td class="text-center">@row.TotalVisits</td>
+                            <td class="text-center"><span style="color:var(--success);">@row.CompletedVisits</span></td>
+                            <td class="text-center"><span style="color:var(--danger);">@row.MissedVisits</span></td>
+                            <td class="text-center"><span style="color:var(--primary);">@row.UpcomingVisits</span></td>
+                            <td class="text-center">@row.ActiveConsents<span style="color:var(--text-secondary);font-size:.8rem;">/@row.TotalConsents</span></td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div style="flex:1;background:#e5e7eb;border-radius:6px;height:8px;overflow:hidden;">
+                                        <div style="width:@(Math.Min(pct,100))%;background:@barCls;height:100%;border-radius:6px;transition:width .4s;"></div>
+                                    </div>
+                                    <span style="font-size:.8rem;font-weight:600;min-width:38px;text-align:right;">@row.EnrollmentPercentage%</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+<!-- ── Section 2: Stored Procedure ────────────────────────────────────── -->
+<div class="card">
+    <div class="card-header" style="display:flex;align-items:center;gap:10px;">
+        <i class="fa-solid fa-gears" style="color:var(--accent2);"></i>
+        <div>
+            <h5 style="margin:0;font-weight:700;">Enrollment by Study (Stored Procedure)</h5>
+            <small style="color:var(--text-secondary);">Source: <code>usp_GetEnrollmentSummaryByStudy</code> — filtered result set</small>
+        </div>
+        <span class="badge badge-scheduled" style="margin-left:auto;">@Model.SpResults.Count rows</span>
+    </div>
+    <div class="card-body" style="padding:0;overflow-x:auto;">
+        @if (!Model.SpResults.Any())
+        {
+            <div style="padding:32px;text-align:center;color:var(--text-secondary);">
+                <i class="fa-solid fa-circle-info" style="font-size:2rem;margin-bottom:12px;display:block;opacity:.4;"></i>
+                No results — stored procedure may not exist yet, or no studies match the current filter.
+            </div>
+        }
+        else
+        {
+            <table class="table" style="margin:0;">
+                <thead>
+                    <tr>
+                        <th>Study</th>
+                        <th>Status</th>
+                        <th>Phase</th>
+                        <th class="text-center">Max</th>
+                        <th class="text-center">Total Enrolled</th>
+                        <th class="text-center">Active</th>
+                        <th class="text-center">Completed</th>
+                        <th class="text-center">Withdrawn</th>
+                        <th class="text-center">Visits Done</th>
+                        <th class="text-center">Missed</th>
+                        <th class="text-center">Enroll %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.SpResults)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight:600;font-size:.9rem;">@r.StudyCode</div>
+                                <div style="font-size:.78rem;color:var(--text-secondary);">@r.StudyName</div>
+                            </td>
+                            <td><span class="badge badge-@r.Status.ToLower()">@r.Status</span></td>
+                            <td><span style="font-size:.82rem;">@(r.Phase ?? "—")</span></td>
+                            <td class="text-center">@r.MaxParticipants</td>
+                            <td class="text-center"><strong>@r.TotalEnrolled</strong></td>
+                            <td class="text-center"><span style="color:var(--success);">@r.ActiveParticipants</span></td>
+                            <td class="text-center">@r.CompletedParticipants</td>
+                            <td class="text-center"><span style="color:var(--danger);">@r.WithdrawnParticipants</span></td>
+                            <td class="text-center"><span style="color:var(--success);">@r.CompletedVisits</span></td>
+                            <td class="text-center"><span style="color:var(--danger);">@r.MissedVisits</span></td>
+                            <td class="text-center">
+                                <span style="font-weight:600;color:@(r.EnrollmentPct >= 90 ? "var(--success)" : r.EnrollmentPct >= 50 ? "var(--primary)" : "var(--warning)")">
+                                    @r.EnrollmentPct%
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+    <div class="card-footer" style="font-size:.8rem;color:var(--text-secondary);padding:10px 16px;">
+        <i class="fa-solid fa-circle-info"></i>
+        SP accepts optional <code>&#64;StudyId</code> and <code>&#64;Status</code> parameters — use the filter bar above to test parameterized queries.
+    </div>
+</div>

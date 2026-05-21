@@ -14,7 +14,7 @@
 <div style="max-width:720px;">
     <form asp-action="Create" method="post">
         @Html.AntiForgeryToken()
-        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
         <div class="card">
             <div class="card-body">
                 <div class="form-grid-2">
@@ -42,7 +42,8 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Scheduled Date <span class="required">*</span></label>
-                        <input asp-for="ScheduledDate" type="datetime-local" class="form-control" />
+                        <input asp-for="ScheduledDate" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" />
+                        <span asp-validation-for="ScheduledDate" class="field-validation-error"></span>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Status</label>
@@ -50,7 +51,9 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Location</label>
-                        <input asp-for="Location" class="form-control" placeholder="e.g. Clinic A, Neuro Unit" />
+                        <select asp-for="Location" class="form-control" asp-items="ViewBag.Locations">
+                            <option value="">-- Select Location --</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Assigned Staff</label>

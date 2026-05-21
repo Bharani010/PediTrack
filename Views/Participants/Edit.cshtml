@@ -18,8 +18,7 @@
     <form asp-action="Edit" asp-route-id="@Model.ParticipantId" method="post">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="ParticipantId" />
-        <input type="hidden" asp-for="CreatedAt" />
-        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
 
         <div class="card">
             <div class="card-body">
@@ -68,7 +67,7 @@
                     <div class="form-section-title">Guardian Contact</div>
                     <div class="form-grid-3">
                         <div class="form-group" style="grid-column:1/3;">
-                            <label class="form-label" asp-for="GuardianName">Guardian Full Name <span class="required">*</span></label>
+                            <label class="form-label" asp-for="GuardianName">Guardian Full Name</label>
                             <input asp-for="GuardianName" class="form-control" />
                         </div>
                         <div class="form-group">
@@ -76,7 +75,7 @@
                             <input asp-for="EnrollmentDate" type="date" class="form-control" />
                         </div>
                         <div class="form-group">
-                            <label class="form-label" asp-for="GuardianPhone">Phone <span class="required">*</span></label>
+                            <label class="form-label" asp-for="GuardianPhone">Phone</label>
                             <input asp-for="GuardianPhone" class="form-control" />
                         </div>
                         <div class="form-group">

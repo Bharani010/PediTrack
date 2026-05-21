@@ -53,10 +53,24 @@ namespace PediTrack.Controllers
         {
             if (id != investigator.InvestigatorId) return BadRequest();
             if (!ModelState.IsValid) return View(investigator);
-            _db.Investigators.Update(investigator);
+
+            // Fetch existing to preserve navigation props, then update scalar fields
+            var existing = await _db.Investigators.FindAsync(id);
+            if (existing == null) return NotFound();
+            existing.Title        = investigator.Title;
+            existing.FirstName    = investigator.FirstName;
+            existing.LastName     = investigator.LastName;
+            existing.Role         = investigator.Role;
+            existing.Email        = investigator.Email;
+            existing.Phone        = investigator.Phone;
+            existing.Department   = investigator.Department;
+            existing.Institution  = investigator.Institution;
+            existing.Status       = investigator.Status;
+            existing.Notes        = investigator.Notes;
+
             await _db.SaveChangesAsync();
-            TempData["Success"] = "Investigator record updated.";
-            return RedirectToAction(nameof(Index));
+            TempData["Success"] = $"{existing.Title} {existing.FirstName} {existing.LastName} updated.";
+            return RedirectToAction(nameof(Details), new { id });
         }
 
         public async Task<IActionResult> Delete(int id)

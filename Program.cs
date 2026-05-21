@@ -18,6 +18,7 @@ builder.Services.AddScoped<IStudyService, StudyService>();
 builder.Services.AddScoped<IVisitService, VisitService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<ISqlAnalyticsService, SqlAnalyticsService>();
 
 var app = builder.Build();
 

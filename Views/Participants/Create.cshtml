@@ -15,7 +15,7 @@
 <div style="max-width:860px;">
     <form asp-action="Create" method="post">
         @Html.AntiForgeryToken()
-        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
 
         <div class="card">
             <div class="card-body">
@@ -69,7 +69,7 @@
                     <div class="form-section-title"><i class="fa-solid fa-people-roof" style="margin-right:6px;"></i>Guardian / Parent Contact</div>
                     <div class="form-grid-3">
                         <div class="form-group" style="grid-column:1/3;">
-                            <label class="form-label" asp-for="GuardianName">Guardian Full Name <span class="required">*</span></label>
+                            <label class="form-label" asp-for="GuardianName">Guardian Full Name</label>
                             <input asp-for="GuardianName" class="form-control" placeholder="Legal guardian name" />
                             <span asp-validation-for="GuardianName" class="field-validation-error"></span>
                         </div>
@@ -78,7 +78,7 @@
                             <input asp-for="EnrollmentDate" type="date" class="form-control" />
                         </div>
                         <div class="form-group">
-                            <label class="form-label" asp-for="GuardianPhone">Guardian Phone <span class="required">*</span></label>
+                            <label class="form-label" asp-for="GuardianPhone">Guardian Phone</label>
                             <input asp-for="GuardianPhone" class="form-control" placeholder="713-555-0000" />
                             <span asp-validation-for="GuardianPhone" class="field-validation-error"></span>
                         </div>

@@ -16,6 +16,8 @@
         <p>@Model.TotalRecords record@(Model.TotalRecords == 1 ? "" : "s") found</p>
     </div>
     <div class="page-header-actions">
+        <a href="@Url.Action("ExportParticipantsCsv", new { studyId = Model.StudyId, status = Model.Status, from = Model.DateFrom?.ToString("yyyy-MM-dd"), to = Model.DateTo?.ToString("yyyy-MM-dd") })"
+           class="btn btn-glass"><i class="fa-solid fa-file-csv"></i> Export CSV</a>
         <button onclick="window.print()" class="btn btn-glass"><i class="fa-solid fa-print"></i> Print</button>
         <a href="@Url.Action("Index")" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back</a>
     </div>

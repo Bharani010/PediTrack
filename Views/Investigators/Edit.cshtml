@@ -13,11 +13,10 @@
 </div>
 
 <div style="max-width:800px;">
-    <form asp-action="Edit" method="post">
+    <form asp-action="Edit" asp-route-id="@Model.InvestigatorId" method="post">
         @Html.AntiForgeryToken()
         <input asp-for="InvestigatorId" type="hidden" />
-        <input asp-for="CreatedAt" type="hidden" />
-        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+        <div asp-validation-summary="All" class="validation-summary-errors"></div>
 
         <div class="card">
             <div class="card-body">
