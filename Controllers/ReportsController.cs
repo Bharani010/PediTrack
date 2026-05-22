@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using PediTrack.Data;
 using PediTrack.Models.ViewModels;
@@ -89,19 +90,55 @@ namespace PediTrack.Controllers
                 FilterStudyStatus = studyStatus
             };
 
-            try
+            // Check whether the view exists; create all SQL objects if they are missing.
+            bool objectsReady = await EnsureSqlObjectsAsync();
+
+            if (objectsReady)
             {
-                vm.Summary   = await _sqlAnalytics.GetStudyEnrollmentSummaryAsync();
-                vm.SpResults = await _sqlAnalytics.GetEnrollmentSummaryByStudyAsync(studyId, studyStatus);
-            }
-            catch
-            {
-                // SQL objects may not exist (e.g. first run before view/SPs were created, or Express edition).
-                TempData["Warning"] = "SQL Analytics objects are not yet available. The database view and stored procedures will be created on the next application restart.";
+                try
+                {
+                    vm.Summary   = await _sqlAnalytics.GetStudyEnrollmentSummaryAsync();
+                    vm.SpResults = await _sqlAnalytics.GetEnrollmentSummaryByStudyAsync(studyId, studyStatus);
+                }
+                catch (Exception ex)
+                {
+                    TempData["Error"] = $"Query failed: {ex.Message}";
+                }
             }
 
             ViewBag.Studies = await _db.Studies.OrderBy(s => s.StudyName).ToListAsync();
             return View(vm);
+        }
+
+        // Returns true when the SQL view exists (creating it first if it was absent).
+        private async Task<bool> EnsureSqlObjectsAsync()
+        {
+            try
+            {
+                // Single lightweight check against sys.objects
+                var conn = _db.Database.GetDbConnection();
+                if (conn.State != System.Data.ConnectionState.Open)
+                    await conn.OpenAsync();
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText =
+                    "SELECT COUNT(*) FROM sys.objects " +
+                    "WHERE name = 'vw_StudyEnrollmentSummary' AND type = 'V'";
+                var count = (int)(await cmd.ExecuteScalarAsync())!;
+
+                if (count == 0)
+                {
+                    // Objects missing — create them now (this also runs on first startup)
+                    DbInitializer.CreateSqlObjects(_db);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"SQL object setup failed: {ex.Message}";
+                return false;
+            }
         }
     }
 }

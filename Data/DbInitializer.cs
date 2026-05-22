@@ -10,7 +10,12 @@ namespace PediTrack.Data
         public static void Seed(ApplicationDbContext db)
         {
             // Create SQL Server objects (view + stored procedures) first.
-            CreateSqlObjects(db);
+            // Log any failure but don't abort the seed — the controller will retry on demand.
+            try { CreateSqlObjects(db); }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[PediTrack] WARNING: SQL object creation failed during seed: {ex.Message}");
+            }
 
             var today = DateTime.Today;
 
@@ -244,15 +249,16 @@ namespace PediTrack.Data
             }
         }
 
-        // ── Creates / replaces the DB view and stored procedures on each startup ──
-        private static void CreateSqlObjects(ApplicationDbContext db)
+        // ── Creates / replaces the DB view and stored procedures ─────────────────
+        // Public so ReportsController can call it on demand if objects are missing.
+        // Each step is executed individually — if any step fails an exception propagates
+        // with a clear message identifying exactly which step failed.
+        public static void CreateSqlObjects(ApplicationDbContext db)
         {
-            try
-            {
-                db.Database.ExecuteSqlRaw(
-                    "IF OBJECT_ID('dbo.vw_StudyEnrollmentSummary','V') IS NOT NULL DROP VIEW dbo.vw_StudyEnrollmentSummary;");
+            RunStep(db, "Drop vw_StudyEnrollmentSummary",
+                "IF OBJECT_ID('dbo.vw_StudyEnrollmentSummary','V') IS NOT NULL DROP VIEW dbo.vw_StudyEnrollmentSummary;");
 
-                db.Database.ExecuteSqlRaw(@"
+            RunStep(db, "Create vw_StudyEnrollmentSummary", @"
 CREATE VIEW dbo.vw_StudyEnrollmentSummary AS
 SELECT
     s.StudyId,
@@ -261,10 +267,10 @@ SELECT
     s.Status                                            AS StudyStatus,
     s.Phase,
     ISNULL(s.MaxParticipants, 0)                        AS MaxParticipants,
-    COUNT(DISTINCT se.StudyEnrollmentId)                AS EnrolledCount,
-    COUNT(DISTINCT CASE WHEN se.Status = 'Active'     THEN se.StudyEnrollmentId END) AS ActiveEnrolled,
-    COUNT(DISTINCT CASE WHEN se.Status = 'Completed'  THEN se.StudyEnrollmentId END) AS CompletedEnrolled,
-    COUNT(DISTINCT CASE WHEN se.Status = 'Withdrawn'  THEN se.StudyEnrollmentId END) AS WithdrawnCount,
+    COUNT(DISTINCT se.EnrollmentId)                AS EnrolledCount,
+    COUNT(DISTINCT CASE WHEN se.Status = 'Active'     THEN se.EnrollmentId END) AS ActiveEnrolled,
+    COUNT(DISTINCT CASE WHEN se.Status = 'Completed'  THEN se.EnrollmentId END) AS CompletedEnrolled,
+    COUNT(DISTINCT CASE WHEN se.Status = 'Withdrawn'  THEN se.EnrollmentId END) AS WithdrawnCount,
     COUNT(v.VisitId)                                    AS TotalVisits,
     SUM(CASE WHEN v.Status = 'Completed'  THEN 1 ELSE 0 END) AS CompletedVisits,
     SUM(CASE WHEN v.Status = 'Missed'     THEN 1 ELSE 0 END) AS MissedVisits,
@@ -276,7 +282,7 @@ SELECT
     CAST(
         CASE
             WHEN ISNULL(s.MaxParticipants, 0) = 0 THEN 0.0
-            ELSE CAST(COUNT(DISTINCT se.StudyEnrollmentId) AS DECIMAL(10,2))
+            ELSE CAST(COUNT(DISTINCT se.EnrollmentId) AS DECIMAL(10,2))
                  / CAST(s.MaxParticipants AS DECIMAL(10,2)) * 100.0
         END
     AS DECIMAL(5,2))                                    AS EnrollmentPercentage
@@ -287,10 +293,10 @@ LEFT JOIN dbo.ConsentForms     cf ON cf.StudyId = s.StudyId
 GROUP BY
     s.StudyId, s.StudyCode, s.StudyName, s.Status, s.Phase, s.MaxParticipants;");
 
-                db.Database.ExecuteSqlRaw(
-                    "IF OBJECT_ID('dbo.usp_GetEnrollmentSummaryByStudy','P') IS NOT NULL DROP PROCEDURE dbo.usp_GetEnrollmentSummaryByStudy;");
+            RunStep(db, "Drop usp_GetEnrollmentSummaryByStudy",
+                "IF OBJECT_ID('dbo.usp_GetEnrollmentSummaryByStudy','P') IS NOT NULL DROP PROCEDURE dbo.usp_GetEnrollmentSummaryByStudy;");
 
-                db.Database.ExecuteSqlRaw(@"
+            RunStep(db, "Create usp_GetEnrollmentSummaryByStudy", @"
 CREATE PROCEDURE dbo.usp_GetEnrollmentSummaryByStudy
     @StudyId  INT           = NULL,
     @Status   NVARCHAR(30)  = NULL
@@ -299,14 +305,14 @@ BEGIN
     SET NOCOUNT ON;
     SELECT s.StudyCode, s.StudyName, s.Status, s.Phase,
         ISNULL(s.MaxParticipants,0) AS MaxParticipants,
-        COUNT(DISTINCT se.StudyEnrollmentId) AS TotalEnrolled,
-        COUNT(DISTINCT CASE WHEN se.Status='Active'    THEN se.StudyEnrollmentId END) AS ActiveParticipants,
-        COUNT(DISTINCT CASE WHEN se.Status='Completed' THEN se.StudyEnrollmentId END) AS CompletedParticipants,
-        COUNT(DISTINCT CASE WHEN se.Status='Withdrawn' THEN se.StudyEnrollmentId END) AS WithdrawnParticipants,
+        COUNT(DISTINCT se.EnrollmentId) AS TotalEnrolled,
+        COUNT(DISTINCT CASE WHEN se.Status='Active'    THEN se.EnrollmentId END) AS ActiveParticipants,
+        COUNT(DISTINCT CASE WHEN se.Status='Completed' THEN se.EnrollmentId END) AS CompletedParticipants,
+        COUNT(DISTINCT CASE WHEN se.Status='Withdrawn' THEN se.EnrollmentId END) AS WithdrawnParticipants,
         SUM(CASE WHEN v.Status='Completed' THEN 1 ELSE 0 END) AS CompletedVisits,
         SUM(CASE WHEN v.Status='Missed'    THEN 1 ELSE 0 END) AS MissedVisits,
         CAST(CASE WHEN ISNULL(s.MaxParticipants,0)=0 THEN 0.00
-            ELSE CAST(COUNT(DISTINCT se.StudyEnrollmentId) AS DECIMAL(10,2))/CAST(s.MaxParticipants AS DECIMAL(10,2))*100.0
+            ELSE CAST(COUNT(DISTINCT se.EnrollmentId) AS DECIMAL(10,2))/CAST(s.MaxParticipants AS DECIMAL(10,2))*100.0
         END AS DECIMAL(5,2)) AS EnrollmentPct
     FROM dbo.Studies s
     LEFT JOIN dbo.StudyEnrollments se ON se.StudyId=s.StudyId
@@ -317,10 +323,10 @@ BEGIN
     ORDER BY TotalEnrolled DESC, s.StudyCode;
 END;");
 
-                db.Database.ExecuteSqlRaw(
-                    "IF OBJECT_ID('dbo.usp_GetParticipantVisitHistory','P') IS NOT NULL DROP PROCEDURE dbo.usp_GetParticipantVisitHistory;");
+            RunStep(db, "Drop usp_GetParticipantVisitHistory",
+                "IF OBJECT_ID('dbo.usp_GetParticipantVisitHistory','P') IS NOT NULL DROP PROCEDURE dbo.usp_GetParticipantVisitHistory;");
 
-                db.Database.ExecuteSqlRaw(@"
+            RunStep(db, "Create usp_GetParticipantVisitHistory", @"
 CREATE PROCEDURE dbo.usp_GetParticipantVisitHistory
     @ParticipantId INT,
     @StudyId       INT = NULL
@@ -341,10 +347,19 @@ BEGIN
       AND (@StudyId IS NULL OR v.StudyId=@StudyId)
     ORDER BY s.StudyCode, v.ScheduledDate;
 END;");
-            }
-            catch
+        }
+
+        // Executes a single DDL statement and wraps any exception with the step name.
+        private static void RunStep(ApplicationDbContext db, string stepName, string sql)
+        {
+            try
             {
-                // SQL Server Express may not support all DDL — app continues without SP/view pages.
+                db.Database.ExecuteSqlRaw(sql);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    $"SQL object setup failed at step '{stepName}': {ex.Message}", ex);
             }
         }
     }

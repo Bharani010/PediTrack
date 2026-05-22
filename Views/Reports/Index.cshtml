@@ -96,27 +96,25 @@
 
 </div>
 
-<!-- ── SSRS Limitation Notice ──────────────────────────────────────────── -->
+<!-- ── T-SQL Analytics Feature Summary ────────────────────────────────── -->
 <div style="margin-top:32px;">
-    <div class="card" style="border-left:4px solid var(--warning);background:rgba(245,158,11,0.04);">
+    <div class="card" style="border-left:4px solid var(--accent2);background:rgba(99,102,241,0.03);">
         <div class="card-body" style="padding:20px 24px;">
             <div style="display:flex;align-items:flex-start;gap:14px;">
-                <div style="width:40px;height:40px;background:rgba(245,158,11,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--warning);flex-shrink:0;">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
+                <div style="width:40px;height:40px;background:rgba(99,102,241,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--accent2);flex-shrink:0;">
+                    <i class="fa-solid fa-code"></i>
                 </div>
                 <div>
-                    <h5 style="font-weight:700;margin:0 0 6px;">SSRS Not Available on SQL Server Express</h5>
+                    <h5 style="font-weight:700;margin:0 0 6px;">T-SQL Analytics — Implemented Directly in SQL Server</h5>
                     <p style="font-size:.87rem;color:var(--text-secondary);margin:0 0 10px;">
-                        This project connects to <strong>SQL Server Express</strong> (<code>.\SQLEXPRESS</code>), which does not include SQL Server Reporting Services (SSRS).
-                        SSRS requires SQL Server Standard, Developer, or Enterprise edition.
-                        PediTrack implements equivalent reporting via Chart.js dashboards, Rotativa PDF, CSV export, and T-SQL stored procedures/views.
+                        PediTrack uses a <strong>SQL Server view</strong> (<code>vw_StudyEnrollmentSummary</code>) and two <strong>stored procedures</strong>
+                        (<code>usp_GetEnrollmentSummaryByStudy</code>, <code>usp_GetParticipantVisitHistory</code>) for advanced aggregations
+                        with <code>CASE</code>, <code>GROUP BY</code>, and optional parameter filtering.
+                        Results are surfaced via <code>FromSqlRaw</code> into keyless EF Core entities and displayed as interactive analytics.
                     </p>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
                         <a href="@Url.Action("SqlAnalytics")" class="btn btn-glass btn-sm">
-                            <i class="fa-solid fa-database"></i> SQL Analytics (alternative)
-                        </a>
-                        <a href="/Docs/SSRS-Integration-Guide.md" class="btn btn-glass btn-sm" target="_blank">
-                            <i class="fa-solid fa-book"></i> SSRS Integration Guide
+                            <i class="fa-solid fa-database"></i> Open SQL Analytics
                         </a>
                     </div>
                 </div>
